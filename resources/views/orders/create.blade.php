@@ -6,6 +6,7 @@
 <section class="py-12 lg:py-16">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
+        <!-- Header -->
         <div class="mb-10">
             <span class="font-mono-ai text-xs uppercase tracking-[0.2em] text-[#86EFAC] font-semibold">Direct Web Ordering</span>
             <h1 class="font-display-ai text-3xl sm:text-5xl font-bold text-white mt-1">
@@ -20,9 +21,9 @@
             <div class="glass-card border-red-500/50 p-4 rounded-2xl mb-8 text-sm text-red-300">
                 <p class="font-bold text-red-400 mb-1">Please check your form:</p>
                 <ul class="list-disc list-inside space-y-1">
-                    <?php foreach ($errors->all() as$err): ?>
+                    @foreach($errors->all() as$err)
                         <li>{{ \$err }}</li>
-                    <?php endforeach; ?>
+                    @endforeach
                 </ul>
             </div>
         @endif
@@ -33,9 +34,10 @@
             <input type="hidden" name="fulfillment_type" id="fulfillment-type-input" value="{{ old('fulfillment_type', 'delivery') }}">
             <input type="hidden" name="payment_method" id="payment-method-input" value="{{ old('payment_method', 'QRIS') }}">
 
+            <!-- LEFT COLUMN: 1. Quick Menu Add + 2. Customer Info + 3. Delivery/Pickup + 4. Payment Method -->
             <div class="lg:col-span-7 space-y-8">
 
-                <!-- STEP 1: SELECT DISHES -->
+                <!-- STEP 1: SELECT / ADD DISHES -->
                 <div class="glass-card rounded-3xl p-6 sm:p-8">
                     <div class="flex items-center justify-between mb-5">
                         <div class="flex items-center gap-3">
@@ -46,7 +48,7 @@
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <?php foreach ($menus as$menu): ?>
+                        @foreach($menus as$menu)
                         <div class="p-3.5 rounded-2xl bg-[#050806]/70 border border-white/10 hover:border-[#4E8752]/50 transition flex items-center gap-3.5">
                             <img src="{{ $menu['image'] }}" alt="{{ $menu['name'] }}" class="w-16 h-16 rounded-xl object-cover shrink-0">
                             <div class="flex-1 min-w-0">
@@ -64,7 +66,7 @@
                                 </div>
                             </div>
                         </div>
-                        <?php endforeach; ?>
+                        @endforeach
                     </div>
                 </div>
 
@@ -95,13 +97,14 @@
                     </div>
                 </div>
 
-                <!-- STEP 3: FULFILLMENT METHOD -->
+                <!-- STEP 3: FULFILLMENT METHOD (DELIVERY VS SELF-PICKUP) -->
                 <div class="glass-card rounded-3xl p-6 sm:p-8 space-y-5">
                     <div class="flex items-center gap-3">
                         <span class="font-mono-ai w-7 h-7 rounded-lg bg-[#4E8752] text-white text-xs font-bold flex items-center justify-center">03</span>
                         <h2 class="font-display-ai text-xl font-bold text-white">Receiving Method (Delivery or Pickup)</h2>
                     </div>
 
+                    <!-- Interactive Switcher -->
                     <div class="grid grid-cols-2 gap-4">
                         <button type="button" id="tab-delivery" onclick="setFulfillment('delivery')"
                                 class="p-4 rounded-2xl border border-[#86EFAC] bg-[#1B4323]/60 text-left transition flex items-start gap-3">
@@ -126,6 +129,7 @@
                         </button>
                     </div>
 
+                    <!-- Delivery Address Fields -->
                     <div id="delivery-fields" class="space-y-4 pt-2">
                         <div>
                             <label class="block text-xs font-mono-ai uppercase text-[#94A898] mb-2">City / Regency *</label>
@@ -139,6 +143,7 @@
                         </div>
                     </div>
 
+                    <!-- Self-Pickup Placeholder Box -->
                     <div id="pickup-fields" class="hidden pt-2">
                         <div class="p-5 rounded-2xl bg-[#1B4323]/35 border border-[#4E8752]/50 space-y-2">
                             <div class="flex items-center justify-between">
@@ -155,6 +160,7 @@
                         </div>
                     </div>
 
+                    <!-- Order Notes -->
                     <div>
                         <label class="block text-xs font-mono-ai uppercase text-[#94A898] mb-2">Order Notes <span class="text-white/40">(Optional)</span></label>
                         <input type="text" name="notes" value="{{ old('notes') }}" placeholder="e.g. Extra spicy dabu-dabu, send at 12 PM, separate chili..."
@@ -162,7 +168,7 @@
                     </div>
                 </div>
 
-                <!-- STEP 4: PAYMENT METHOD -->
+                <!-- STEP 4: SELECT MANUAL PAYMENT METHOD -->
                 <div class="glass-card rounded-3xl p-6 sm:p-8 space-y-5">
                     <div class="flex items-center gap-3">
                         <span class="font-mono-ai w-7 h-7 rounded-lg bg-[#4E8752] text-white text-xs font-bold flex items-center justify-center">04</span>
@@ -170,19 +176,13 @@
                     </div>
 
                     <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                        <?php 
-                            \$first = true;
-                            foreach (\$paymentMethods as $code =>$method): 
-                        ?>
-                        <button type="button" onclick="selectPayment('{{ $code }}')" data-pay="{{ $code }}"
-                                class="pay-method-btn p-3.5 rounded-2xl border {{ \$first ? 'border-[#86EFAC] bg-[#1B4323]/60' : 'border-white/15 bg-[#050806]/60' }} text-center transition">
-                            <span class="font-mono-ai text-sm font-bold text-white block">{{ \$code }}</span>
-                            <span class="text-[10px] text-[#94A898] block mt-0.5">{{ \$method['type'] === 'qris' ? 'Scan QR' : 'Bank Transfer' }}</span>
+                        @foreach(['QRIS', 'BCA', 'MANDIRI', 'BRI', 'BNI'] as \$method)
+                        <button type="button" onclick="selectPayment('{{ $method }}')" data-pay="{{ $method }}"
+                                class="pay-method-btn p-3.5 rounded-2xl border {{ \$loop->first ? 'border-[#86EFAC] bg-[#1B4323]/60' : 'border-white/15 bg-[#050806]/60' }} text-center transition">
+                            <span class="font-mono-ai text-sm font-bold text-white block">{{ \$method }}</span>
+                            <span class="text-[10px] text-[#94A898] block mt-0.5">{{ \$method === 'QRIS' ? 'Scan QR' : 'Bank Transfer' }}</span>
                         </button>
-                        <?php 
-                            \$first = false;
-                            endforeach; 
-                        ?>
+                        @endforeach
                     </div>
                     <p class="text-xs text-[#94A898]">
                         * Account number / QRIS code and receipt upload dropzone will be shown immediately on the next screen after you lock your order.
@@ -191,7 +191,7 @@
 
             </div>
 
-            <!-- RIGHT COLUMN: SUMMARY -->
+            <!-- RIGHT COLUMN: LIVE ORDER SUMMARY -->
             <div class="lg:col-span-5 lg:sticky lg:top-28">
                 <div class="glass-card rounded-3xl p-6 sm:p-8 space-y-6">
                     <div class="flex items-center justify-between border-b border-white/10 pb-4">
@@ -199,8 +199,12 @@
                         <span id="checkout-item-count" class="font-mono-ai text-xs px-3 py-1 rounded-full bg-[#1B4323] text-[#86EFAC]">0 Items</span>
                     </div>
 
-                    <div id="checkout-items-list" class="space-y-3 max-h-80 overflow-y-auto pr-1"></div>
+                    <!-- Selected Items List -->
+                    <div id="checkout-items-list" class="space-y-3 max-h-80 overflow-y-auto pr-1">
+                        <!-- Populated by JS -->
+                    </div>
 
+                    <!-- Price Breakdown -->
                     <div class="border-t border-white/10 pt-4 space-y-2.5 text-sm">
                         <div class="flex justify-between text-[#94A898]">
                             <span>Dishes Subtotal</span>
