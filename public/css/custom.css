@@ -1,0 +1,209 @@
+/* =========================================================
+   AI-FRIENDLY MODERN TYPOGRAPHY & GLOBAL RESET
+========================================================= */
+html {
+    scroll-behavior: smooth;
+    background-color: #050806;
+    color: #F2F7F4;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: #050806;
+    overflow-x: hidden;
+    letter-spacing: -0.01em;
+}
+
+/* AI-Style Geometric Display Font */
+.font-display-ai {
+    font-family: 'Space Grotesk', sans-serif;
+    letter-spacing: -0.03em;
+}
+
+/* AI-Style Tech Mono Font for Badges/Metrics */
+.font-mono-ai {
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* =========================================================
+   1 & 2. ANIMATED AURORA GLOW BACKGROUND (blur(120px))
+   Blends Deep Hunter Green (#1B4323) & Sage Green (#4E8752)
+========================================================= */
+.aurora-container {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+
+/* Subtle AI Tech Grid Overlay over the Aurora */
+.ai-grid-overlay {
+    position: absolute;
+    inset: 0;
+    background-image: 
+        linear-gradient(to right, rgba(78, 135, 82, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(78, 135, 82, 0.05) 1px, transparent 1px);
+    background-size: 64px 64px;
+    mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, #000 40%, transparent 100%);
+    -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, #000 40%, transparent 100%);
+}
+
+.aurora-hunter {
+    position: absolute;
+    background: radial-gradient(circle, #1B4323 0%, rgba(27, 67, 35, 0.25) 70%, transparent 100%);
+    filter: blur(120px);
+    -webkit-filter: blur(120px);
+    opacity: 0.6;
+    border-radius: 9999px;
+    will-change: transform;
+}
+
+.aurora-sage {
+    position: absolute;
+    background: radial-gradient(circle, #4E8752 0%, #1B4323 65%, transparent 100%);
+    filter: blur(120px);
+    -webkit-filter: blur(120px);
+    opacity: 0.4;
+    border-radius: 9999px;
+    will-change: transform;
+}
+
+/* Keyframes agar Aurora bergerak mengalir seolah-olah hidup */
+.aurora-orb-1 {
+    animation: auroraFloat1 18s ease-in-out infinite alternate;
+}
+.aurora-orb-2 {
+    animation: auroraFloat2 22s ease-in-out infinite alternate;
+}
+.aurora-orb-3 {
+    animation: auroraFloat3 25s ease-in-out infinite alternate;
+}
+.aurora-orb-4 {
+    animation: auroraFloat1 20s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes auroraFloat1 {
+    0%   { transform: translate3d(0px, 0px, 0) scale(1); }
+    50%  { transform: translate3d(90px, 60px, 0) scale(1.15); }
+    100% { transform: translate3d(-60px, 110px, 0) scale(0.92); }
+}
+
+@keyframes auroraFloat2 {
+    0%   { transform: translate3d(0px, 0px, 0) scale(1); }
+    50%  { transform: translate3d(-110px, 80px, 0) scale(1.18); }
+    100% { transform: translate3d(70px, -70px, 0) scale(0.95); }
+}
+
+@keyframes auroraFloat3 {
+    0%   { transform: translate3d(0px, 0px, 0) scale(1) rotate(0deg); }
+    50%  { transform: translate3d(80px, -90px, 0) scale(1.12) rotate(12deg); }
+    100% { transform: translate3d(-90px, 50px, 0) scale(1.05) rotate(-8deg); }
+}
+
+/* =========================================================
+   3. GLASSMORPHISM CARDS (bg-[#0D140F]/65 + backdrop-blur-md)
+========================================================= */
+.glass-card {
+    background-color: rgba(13, 20, 15, 0.65);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(134, 185, 140, 0.16);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55), inset 0 1px 0 0 rgba(255, 255, 255, 0.07);
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.35s ease,
+                box-shadow 0.35s ease;
+}
+
+.glass-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(78, 135, 82, 0.5);
+    box-shadow: 0 28px 65px rgba(0, 0, 0, 0.75), 0 0 30px rgba(78, 135, 82, 0.16), inset 0 1px 0 0 rgba(255, 255, 255, 0.14);
+}
+
+/* =========================================================
+   4. SCROLL REVEAL & ENTRANCE ANIMATIONS
+========================================================= */
+.reveal-on-scroll {
+    opacity: 0;
+    transform: translateY(36px) scale(0.98);
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity, transform;
+}
+
+.reveal-on-scroll.is-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+/* Staggered Delay Classes */
+.delay-100 { transition-delay: 100ms; }
+.delay-200 { transition-delay: 200ms; }
+.delay-300 { transition-delay: 300ms; }
+.delay-400 { transition-delay: 400ms; }
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #050806;
+}
+::-webkit-scrollbar-thumb {
+    background: #1B4323;
+    border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #4E8752;
+}
+
+/* =========================================================
+   5. ANIMATED ORDER STATUS TRACKER LOGOS & PULSES
+========================================================= */
+@keyframes pulseRing {
+    0% { transform: scale(0.85); opacity: 0.8; }
+    70% { transform: scale(1.45); opacity: 0; }
+    100% { transform: scale(1.45); opacity: 0; }
+}
+
+@keyframes floatIcon {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-6px); }
+}
+
+@keyframes flameFlicker {
+    0%, 100% { transform: scaleY(1) rotate(0deg); }
+    50% { transform: scaleY(1.12) rotate(3deg); }
+}
+
+@keyframes scooterMove {
+    0%, 100% { transform: translateX(0px); }
+    50% { transform: translateX(6px); }
+}
+
+.status-node-active {
+    position: relative;
+    background: linear-gradient(135deg, #4E8752, #1B4323);
+    border-color: #86EFAC !important;
+    box-shadow: 0 0 30px rgba(74, 222, 128, 0.45);
+}
+
+.status-node-active::before {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 9999px;
+    border: 2px solid #4ADE80;
+    animation: pulseRing 2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+.status-node-done {
+    background-color: #1B4323;
+    border-color: #4E8752 !important;
+    color: #86EFAC;
+}
+
+.anim-float { animation: floatIcon 2.4s ease-in-out infinite; }
+.anim-flame { animation: flameFlicker 1.2s ease-in-out infinite; }
+.anim-scooter { animation: scooterMove 1.4s ease-in-out infinite; }
