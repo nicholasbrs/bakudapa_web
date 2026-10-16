@@ -17,12 +17,12 @@
             </p>
         </div>
 
-        @if(\$errors->any())
+        @if($errors->any())
             <div class="glass-card border-red-500/50 p-4 rounded-2xl mb-8 text-sm text-red-300">
                 <p class="font-bold text-red-400 mb-1">Please check your form:</p>
                 <ul class="list-disc list-inside space-y-1">
-                    @foreach($errors->all() as$err)
-                        <li>{{ \$err }}</li>
+                    @foreach($errors->all() as $err)
+                        <li>{{ $err }}</li>
                     @endforeach
                 </ul>
             </div>
@@ -48,18 +48,18 @@
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        @foreach($menus as$menu)
+                        @foreach($menus as $menu)
                         <div class="p-3.5 rounded-2xl bg-[#050806]/70 border border-white/10 hover:border-[#4E8752]/50 transition flex items-center gap-3.5">
                             <img src="{{ $menu['image'] }}" alt="{{ $menu['name'] }}" class="w-16 h-16 rounded-xl object-cover shrink-0">
                             <div class="flex-1 min-w-0">
-                                <span class="font-mono-ai text-[10px] px-2 py-0.5 rounded {{ \$menu['category'] === 'HALAL' ? 'bg-[#1B4323] text-[#4ADE80]' : 'bg-amber-500/20 text-amber-300' }}">
-                                    {{ \$menu['category'] }}
+                                <span class="font-mono-ai text-[10px] px-2 py-0.5 rounded {{ $menu['category'] === 'HALAL' ? 'bg-[#1B4323] text-[#4ADE80]' : 'bg-amber-500/20 text-amber-300' }}">
+                                    {{ $menu['category'] }}
                                 </span>
-                                <h3 class="font-display-ai text-sm font-bold text-white truncate mt-1">{{ \$menu['name'] }}</h3>
+                                <h3 class="font-display-ai text-sm font-bold text-white truncate mt-1">{{ $menu['name'] }}</h3>
                                 <div class="flex items-center justify-between mt-1.5">
-                                    <span class="font-mono-ai text-xs text-[#E2C07D]">IDR {{ number_format(\$menu['price']) }}</span>
+                                    <span class="font-mono-ai text-xs text-[#E2C07D]">IDR {{ number_format($menu['price']) }}</span>
                                     <button type="button"
-                                            onclick="addToCart({{ $menu['id'] }}, '{{$menu['name'] }}', {{ $menu['price'] }}, '{{$menu['category'] }}', false)"
+                                            onclick="addToCart({{ $menu['id'] }}, '{{ $menu['name'] }}', {{ $menu['price'] }}, '{{ $menu['category'] }}', false)"
                                             class="px-2.5 py-1 rounded-lg bg-[#4E8752] hover:bg-[#3d6e40] text-white font-mono-ai text-xs font-bold transition">
                                         + Add
                                     </button>
@@ -176,11 +176,11 @@
                     </div>
 
                     <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                        @foreach(['QRIS', 'BCA', 'MANDIRI', 'BRI', 'BNI'] as \$method)
+                        @foreach(['QRIS', 'BCA', 'MANDIRI', 'BRI', 'BNI'] as $method)
                         <button type="button" onclick="selectPayment('{{ $method }}')" data-pay="{{ $method }}"
-                                class="pay-method-btn p-3.5 rounded-2xl border {{ \$loop->first ? 'border-[#86EFAC] bg-[#1B4323]/60' : 'border-white/15 bg-[#050806]/60' }} text-center transition">
-                            <span class="font-mono-ai text-sm font-bold text-white block">{{ \$method }}</span>
-                            <span class="text-[10px] text-[#94A898] block mt-0.5">{{ \$method === 'QRIS' ? 'Scan QR' : 'Bank Transfer' }}</span>
+                                class="pay-method-btn p-3.5 rounded-2xl border {{ $loop->first ? 'border-[#86EFAC] bg-[#1B4323]/60' : 'border-white/15 bg-[#050806]/60' }} text-center transition">
+                            <span class="font-mono-ai text-sm font-bold text-white block">{{ $method }}</span>
+                            <span class="text-[10px] text-[#94A898] block mt-0.5">{{ $method === 'QRIS' ? 'Scan QR' : 'Bank Transfer' }}</span>
                         </button>
                         @endforeach
                     </div>
