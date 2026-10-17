@@ -1,33 +1,68 @@
 /* =========================================================
-   AI-FRIENDLY MODERN TYPOGRAPHY & GLOBAL RESET
+   THEME TOKENS — Palet "Rica merah dan emas"
+   Nilai berupa RGB tanpa koma supaya bisa dipakai bersama
+   transparansi: rgb(var(--bd-cta) / 0.5). Tailwind membaca
+   token yang sama (lihat tailwind.config di layouts/app.blade.php).
+   Ganti tema cukup dengan mengubah blok ini.
+========================================================= */
+:root {
+    --bd-bg: 21 16 13;          /* #15100D  latar halaman */
+    --bd-card: 33 25 21;        /* #211915  kartu */
+    --bd-select: 51 32 26;      /* #33201A  latar terpilih / hover lembut */
+    --bd-text: 245 235 221;     /* #F5EBDD  teks utama (krem) */
+    --bd-muted: 184 169 154;    /* #B8A99A  teks pendukung */
+    --bd-cta: 194 59 37;        /* #C23B25  tombol utama (rica) */
+    --bd-cta-hover: 168 48 32;  /* #A83020 */
+    --bd-cta-deep: 142 39 22;   /* #8E2716  ujung gradien */
+    --bd-gold: 226 192 125;     /* #E2C07D  aksen premium */
+    --bd-halal: 127 184 140;    /* #7FB88C  label halal */
+    --bd-rica: 224 88 63;       /* #E0583F  ujung gradien judul */
+}
+
+/* =========================================================
+   TYPOGRAPHY & GLOBAL RESET
 ========================================================= */
 html {
     scroll-behavior: smooth;
-    background-color: #050806;
-    color: #F2F7F4;
+    background-color: rgb(var(--bd-bg));
+    color: rgb(var(--bd-text));
 }
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background-color: #050806;
+    background-color: rgb(var(--bd-bg));
     overflow-x: hidden;
     letter-spacing: -0.01em;
 }
 
-/* AI-Style Geometric Display Font */
-.font-display-ai {
-    font-family: 'Space Grotesk', sans-serif;
-    letter-spacing: -0.03em;
+/* Judul: serif hangat (Fraunces) */
+.font-display {
+    font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
+    letter-spacing: -0.01em;
+    font-optical-sizing: auto;
 }
 
-/* AI-Style Tech Mono Font for Badges/Metrics */
-.font-mono-ai {
-    font-family: 'JetBrains Mono', monospace;
+/* Label & keterangan kecil: sans yang sama dengan isi halaman */
+.font-label {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    letter-spacing: 0.01em;
+}
+
+/* Harga & jumlah: angka tabular supaya rapi sejajar */
+.font-num {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Kode pesanan & nomor rekening: monospace agar tiap digit jelas */
+.font-code {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    letter-spacing: 0;
 }
 
 /* =========================================================
    1 & 2. ANIMATED AURORA GLOW BACKGROUND (blur(120px))
-   Blends Deep Hunter Green (#1B4323) & Sage Green (#4E8752)
+   Menyatukan semburat rica tua dan rica merah dengan lembut
 ========================================================= */
 .aurora-container {
     position: fixed;
@@ -37,34 +72,22 @@ body {
     overflow: hidden;
 }
 
-/* Subtle AI Tech Grid Overlay over the Aurora */
-.ai-grid-overlay {
-    position: absolute;
-    inset: 0;
-    background-image: 
-        linear-gradient(to right, rgba(78, 135, 82, 0.05) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(78, 135, 82, 0.05) 1px, transparent 1px);
-    background-size: 64px 64px;
-    mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, #000 40%, transparent 100%);
-    -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, #000 40%, transparent 100%);
-}
-
 .aurora-hunter {
     position: absolute;
-    background: radial-gradient(circle, #1B4323 0%, rgba(27, 67, 35, 0.25) 70%, transparent 100%);
+    background: radial-gradient(circle, rgb(var(--bd-cta-deep)) 0%, rgb(var(--bd-cta-deep) / 0.25) 70%, transparent 100%);
     filter: blur(120px);
     -webkit-filter: blur(120px);
-    opacity: 0.6;
+    opacity: 0.3;
     border-radius: 9999px;
     will-change: transform;
 }
 
 .aurora-sage {
     position: absolute;
-    background: radial-gradient(circle, #4E8752 0%, #1B4323 65%, transparent 100%);
+    background: radial-gradient(circle, rgb(var(--bd-cta)) 0%, rgb(var(--bd-cta-deep)) 65%, transparent 100%);
     filter: blur(120px);
     -webkit-filter: blur(120px);
-    opacity: 0.4;
+    opacity: 0.18;
     border-radius: 9999px;
     will-change: transform;
 }
@@ -102,13 +125,13 @@ body {
 }
 
 /* =========================================================
-   3. GLASSMORPHISM CARDS (bg-[#0D140F]/65 + backdrop-blur-md)
+   3. GLASSMORPHISM CARDS (bg-[rgb(var(--bd-card))]/65 + backdrop-blur-md)
 ========================================================= */
 .glass-card {
-    background-color: rgba(13, 20, 15, 0.65);
+    background-color: rgb(var(--bd-card) / 0.65);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(134, 185, 140, 0.16);
+    border: 1px solid rgb(var(--bd-gold) / 0.16);
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55), inset 0 1px 0 0 rgba(255, 255, 255, 0.07);
     transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
                 border-color 0.35s ease,
@@ -117,8 +140,8 @@ body {
 
 .glass-card:hover {
     transform: translateY(-4px);
-    border-color: rgba(78, 135, 82, 0.5);
-    box-shadow: 0 28px 65px rgba(0, 0, 0, 0.75), 0 0 30px rgba(78, 135, 82, 0.16), inset 0 1px 0 0 rgba(255, 255, 255, 0.14);
+    border-color: rgb(var(--bd-cta) / 0.5);
+    box-shadow: 0 28px 65px rgba(0, 0, 0, 0.75), 0 0 30px rgb(var(--bd-cta) / 0.16), inset 0 1px 0 0 rgba(255, 255, 255, 0.14);
 }
 
 /* =========================================================
@@ -148,14 +171,14 @@ body {
     width: 8px;
 }
 ::-webkit-scrollbar-track {
-    background: #050806;
+    background: rgb(var(--bd-bg));
 }
 ::-webkit-scrollbar-thumb {
-    background: #1B4323;
+    background: rgb(var(--bd-select));
     border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: #4E8752;
+    background: rgb(var(--bd-cta));
 }
 
 /* =========================================================
@@ -184,9 +207,9 @@ body {
 
 .status-node-active {
     position: relative;
-    background: linear-gradient(135deg, #4E8752, #1B4323);
-    border-color: #86EFAC !important;
-    box-shadow: 0 0 30px rgba(74, 222, 128, 0.45);
+    background: linear-gradient(135deg, rgb(var(--bd-cta)), rgb(var(--bd-cta-deep)));
+    border-color: rgb(var(--bd-gold)) !important;
+    box-shadow: 0 0 30px rgb(var(--bd-gold) / 0.45);
 }
 
 .status-node-active::before {
@@ -194,14 +217,14 @@ body {
     position: absolute;
     inset: -6px;
     border-radius: 9999px;
-    border: 2px solid #4ADE80;
+    border: 2px solid rgb(var(--bd-gold));
     animation: pulseRing 2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
 }
 
 .status-node-done {
-    background-color: #1B4323;
-    border-color: #4E8752 !important;
-    color: #86EFAC;
+    background-color: rgb(var(--bd-select));
+    border-color: rgb(var(--bd-cta)) !important;
+    color: rgb(var(--bd-gold));
 }
 
 .anim-float { animation: floatIcon 2.4s ease-in-out infinite; }
@@ -210,22 +233,22 @@ body {
 /* ==========================================================
    MAP (Leaflet) — dark theme, center pin, markers
 ========================================================== */
-.map-dark { background: #0b120d; }
+.map-dark { background: rgb(var(--bd-bg)); }
 .map-dark .leaflet-tile-pane {
-    filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.88) saturate(0.7);
+    filter: invert(1) hue-rotate(180deg) sepia(0.35) brightness(0.92) contrast(0.88) saturate(0.75);
 }
 .map-dark .leaflet-control-attribution {
-    background: rgba(5, 8, 6, 0.75);
-    color: #94A898;
+    background: rgb(var(--bd-bg) / 0.75);
+    color: rgb(var(--bd-muted));
     font-size: 10px;
 }
-.map-dark .leaflet-control-attribution a { color: #86EFAC; }
+.map-dark .leaflet-control-attribution a { color: rgb(var(--bd-gold)); }
 .map-dark .leaflet-bar a {
-    background: #0D140F;
-    color: #F2F7F4;
+    background: rgb(var(--bd-card));
+    color: rgb(var(--bd-text));
     border-bottom-color: rgba(255, 255, 255, 0.12);
 }
-.map-dark .leaflet-bar a:hover { background: #1B4323; }
+.map-dark .leaflet-bar a:hover { background: rgb(var(--bd-select)); }
 
 /* GoFood-style fixed pin at the center of the map */
 .map-pin {
@@ -264,8 +287,8 @@ body {
     height: 44px;
     border-radius: 50% 50% 50% 0;
     transform: rotate(-45deg);
-    background: linear-gradient(135deg, #4E8752, #1B4323);
-    border: 2px solid #86EFAC;
+    background: linear-gradient(135deg, rgb(var(--bd-cta)), rgb(var(--bd-select)));
+    border: 2px solid rgb(var(--bd-gold));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -297,9 +320,9 @@ body {
     z-index: 80;
     padding: 0.75rem 1.1rem;
     border-radius: 0.9rem;
-    background: #0D140F;
-    border: 1px solid rgba(134, 239, 172, 0.45);
-    color: #F2F7F4;
+    background: rgb(var(--bd-card));
+    border: 1px solid rgb(var(--bd-gold) / 0.45);
+    color: rgb(var(--bd-text));
     font-size: 0.8rem;
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
     max-width: 90vw;

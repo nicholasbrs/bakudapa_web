@@ -71,13 +71,13 @@
             if (!item) {
                 box.innerHTML =
                     '<button type="button" onclick="OrderPage.add(' + id + ')" ' +
-                    'class="w-full px-4 py-2.5 rounded-xl bg-[#4E8752] hover:bg-[#3d6e40] text-white font-mono-ai text-xs font-bold transition">+ Add to Bag</button>';
+                    'class="w-full px-4 py-2.5 rounded-xl bg-bd-cta hover:bg-bd-cta-hover text-white font-label text-xs font-bold transition">+ Add to Bag</button>';
             } else {
                 box.innerHTML =
-                    '<div class="w-full flex items-center justify-between rounded-xl border border-[#86EFAC]/50 bg-[#1B4323]/50 p-1">' +
-                    '<button type="button" onclick="OrderPage.change(' + id + ',-1)" class="w-9 h-9 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold">−</button>' +
-                    '<span class="font-mono-ai text-sm font-bold text-white">' + item.qty + ' in bag</span>' +
-                    '<button type="button" onclick="OrderPage.change(' + id + ',1)" class="w-9 h-9 rounded-lg bg-[#4E8752] hover:bg-[#3d6e40] text-white font-bold">+</button>' +
+                    '<div class="w-full flex items-center justify-between rounded-xl border border-bd-gold/50 bg-bd-select/50 p-1">' +
+                    '<button type="button" onclick="OrderPage.change(' + id + ',-1)" class="w-9 h-9 rounded-lg bg-white/10 hover:bg-white/20 text-bd-text font-bold">−</button>' +
+                    '<span class="font-label text-sm font-bold text-bd-text">' + item.qty + ' in bag</span>' +
+                    '<button type="button" onclick="OrderPage.change(' + id + ',1)" class="w-9 h-9 rounded-lg bg-bd-cta hover:bg-bd-cta-hover text-white font-bold">+</button>' +
                     '</div>';
             }
         });
@@ -104,17 +104,17 @@
     function itemRowEditable(i) {
         const m = MENU_BY_ID[i.id] || {};
         return (
-            '<div class="p-3 rounded-2xl bg-[#050806]/80 border border-white/10 flex items-center gap-3">' +
+            '<div class="p-3 rounded-2xl bg-bd-bg/80 border border-white/10 flex items-center gap-3">' +
             '<img src="' + esc(m.image || '') + '" alt="" class="w-14 h-14 rounded-xl object-cover shrink-0">' +
             '<div class="flex-1 min-w-0">' +
-            '<p class="font-mono-ai text-[10px] text-[#86EFAC]">' + esc(i.category) + '</p>' +
-            '<h4 class="font-display-ai text-sm font-bold text-white truncate">' + esc(i.name) + '</h4>' +
-            '<p class="font-mono-ai text-xs text-[#E2C07D]">' + fmt(i.price * i.qty) + '</p>' +
+            '<p class="font-label text-xs text-bd-gold">' + esc(i.category) + '</p>' +
+            '<h4 class="font-display text-sm font-bold text-bd-text truncate">' + esc(i.name) + '</h4>' +
+            '<p class="font-num text-xs text-bd-gold">' + fmt(i.price * i.qty) + '</p>' +
             '</div>' +
             '<div class="flex items-center gap-2 shrink-0">' +
-            '<button type="button" onclick="OrderPage.change(' + i.id + ',-1)" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white">−</button>' +
-            '<span class="font-mono-ai text-xs w-5 text-center text-white">' + i.qty + '</span>' +
-            '<button type="button" onclick="OrderPage.change(' + i.id + ',1)" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white">+</button>' +
+            '<button type="button" onclick="OrderPage.change(' + i.id + ',-1)" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-bd-text">−</button>' +
+            '<span class="font-label text-xs w-5 text-center text-bd-text">' + i.qty + '</span>' +
+            '<button type="button" onclick="OrderPage.change(' + i.id + ',1)" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-bd-text">+</button>' +
             '</div>' +
             '</div>'
         );
@@ -124,10 +124,10 @@
         return (
             '<div class="flex items-center justify-between gap-3 py-2.5 border-b border-white/10 last:border-0">' +
             '<div class="min-w-0">' +
-            '<p class="font-display-ai text-sm font-bold text-white truncate">' + esc(i.name) + '</p>' +
-            '<p class="font-mono-ai text-[11px] text-[#94A898]">' + i.qty + ' × ' + fmt(i.price) + ' · ' + esc(i.category) + '</p>' +
+            '<p class="font-display text-sm font-bold text-bd-text truncate">' + esc(i.name) + '</p>' +
+            '<p class="font-num text-xs text-bd-muted">' + i.qty + ' × ' + fmt(i.price) + ' · ' + esc(i.category) + '</p>' +
             '</div>' +
-            '<span class="font-mono-ai text-sm text-white shrink-0">' + fmt(i.price * i.qty) + '</span>' +
+            '<span class="font-num text-sm text-bd-text shrink-0">' + fmt(i.price * i.qty) + '</span>' +
             '</div>'
         );
     }
@@ -137,8 +137,8 @@
         if (!list) return;
         if (!cart.length) {
             list.innerHTML =
-                '<div class="p-8 rounded-2xl bg-[#050806]/60 border border-white/10 text-center text-sm text-[#94A898]">' +
-                'Your bag is empty.<br><span class="text-xs">Close this and tap <strong class="text-white">+ Add to Bag</strong> on any dish.</span></div>';
+                '<div class="p-8 rounded-2xl bg-bd-bg/60 border border-white/10 text-center text-sm text-bd-muted">' +
+                'Your bag is empty.<br><span class="text-xs">Close this and tap <strong class="text-bd-text">+ Add to Bag</strong> on any dish.</span></div>';
         } else {
             list.innerHTML = cart.map(itemRowEditable).join('');
         }
@@ -206,8 +206,8 @@
         $('dish-modal-spicy').textContent = m.spicy;
         const cat = $('dish-modal-cat');
         cat.textContent = m.category;
-        cat.className = 'font-mono-ai text-[10px] px-2 py-0.5 rounded ' +
-            (m.category === 'HALAL' ? 'bg-[#1B4323] text-[#4ADE80]' : 'bg-amber-500/20 text-amber-300');
+        cat.className = 'font-label text-xs px-2 py-0.5 rounded ' +
+            (m.category === 'HALAL' ? 'bg-bd-halal/15 text-bd-halal' : 'bg-amber-500/20 text-amber-300');
         $('dish-modal-ctl').dataset.dishCtl = id;
         renderDishControls();
         $('dish-modal').classList.remove('hidden');
@@ -229,10 +229,10 @@
         });
         document.querySelectorAll('.dish-filter-btn').forEach(btn => {
             const active = btn.dataset.filter === filter;
-            btn.className = 'dish-filter-btn px-4 py-2 rounded-xl text-xs font-mono-ai font-semibold border transition ' +
+            btn.className = 'dish-filter-btn px-4 py-2 rounded-xl text-xs font-label font-semibold border transition ' +
                 (active
-                    ? 'border-[#86EFAC] bg-[#1B4323]/70 text-white'
-                    : 'border-white/15 bg-[#050806]/60 text-[#94A898] hover:text-white');
+                    ? 'border-bd-gold bg-bd-select/70 text-bd-text'
+                    : 'border-white/15 bg-bd-bg/60 text-bd-muted hover:text-bd-text');
         });
     }
 
@@ -246,15 +246,15 @@
             const dot = pill.querySelector('.pill-dot');
             const done = n < currentStep;
             const active = n === currentStep;
-            dot.className = 'pill-dot w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold font-mono-ai transition ' +
-                (done ? 'bg-[#86EFAC] text-[#0D140F]' : active ? 'bg-[#4E8752] text-white ring-2 ring-[#86EFAC]/50' : 'bg-white/10 text-[#94A898]');
+            dot.className = 'pill-dot w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold font-label transition ' +
+                (done ? 'bg-bd-gold text-bd-card' : active ? 'bg-bd-cta text-white ring-2 ring-bd-gold/50' : 'bg-white/10 text-bd-muted');
             dot.textContent = done ? '✓' : String(n).padStart(2, '0');
             pill.querySelector('.pill-label').className = 'pill-label text-xs font-semibold hidden sm:block ' +
-                (active ? 'text-white' : done ? 'text-[#86EFAC]' : 'text-[#94A898]');
+                (active ? 'text-bd-text' : done ? 'text-bd-gold' : 'text-bd-muted');
         }
         [1, 2].forEach(n => {
             const line = $('step-line-' + n);
-            if (line) line.className = 'step-line flex-1 h-px mx-2 sm:mx-4 ' + (n < currentStep ? 'bg-[#86EFAC]' : 'bg-white/15');
+            if (line) line.className = 'step-line flex-1 h-px mx-2 sm:mx-4 ' + (n < currentStep ? 'bg-bd-gold' : 'bg-white/15');
         });
     }
 
@@ -285,8 +285,8 @@
         fulfillment = type === 'pickup' ? 'pickup' : 'delivery';
         $('fulfillment-type-input').value = fulfillment;
 
-        const on = 'p-4 rounded-2xl border border-[#86EFAC] bg-[#1B4323]/60 text-left transition flex items-start gap-3';
-        const off = 'p-4 rounded-2xl border border-white/15 bg-[#050806]/60 text-left transition flex items-start gap-3 hover:border-white/30';
+        const on = 'p-4 rounded-2xl border border-bd-gold bg-bd-select/60 text-left transition flex items-start gap-3';
+        const off = 'p-4 rounded-2xl border border-white/15 bg-bd-bg/60 text-left transition flex items-start gap-3 hover:border-white/30';
         $('tab-delivery').className = fulfillment === 'delivery' ? on : off;
         $('tab-pickup').className = fulfillment === 'pickup' ? on : off;
 
@@ -374,7 +374,7 @@
         const c = $(containerId);
         if (c && !c.dataset.failed) {
             c.dataset.failed = '1';
-            c.innerHTML = '<div class="h-full flex items-center justify-center p-6 text-center text-xs text-[#94A898]">' +
+            c.innerHTML = '<div class="h-full flex items-center justify-center p-6 text-center text-xs text-bd-muted">' +
                 'The map could not be loaded. Please check your internet connection and refresh the page.</div>';
         }
     }
@@ -383,10 +383,10 @@
         const el = $('pin-status');
         if (!el) return;
         if (isSet) {
-            el.className = 'font-mono-ai text-[11px] px-2.5 py-1 rounded-full bg-[#1B4323] text-[#4ADE80]';
+            el.className = 'font-label text-xs px-2.5 py-1 rounded-full bg-bd-halal/15 text-bd-halal';
             el.textContent = '● Pin set';
         } else {
-            el.className = 'font-mono-ai text-[11px] px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300';
+            el.className = 'font-label text-xs px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300';
             el.textContent = '○ Move the map to set your pin';
         }
     }
@@ -395,7 +395,7 @@
         const el = $('pin-detected');
         if (!el) return;
         el.textContent = text;
-        el.className = 'text-xs leading-relaxed ' + (muted ? 'text-[#94A898]' : 'text-[#F2F7F4]');
+        el.className = 'text-xs leading-relaxed ' + (muted ? 'text-bd-muted' : 'text-bd-text');
     }
 
     function setPinFromCenter() {
@@ -509,7 +509,7 @@
             return;
         }
         box.classList.remove('hidden');
-        box.innerHTML = '<div class="px-4 py-3 text-xs text-[#94A898]">Searching…</div>';
+        box.innerHTML = '<div class="px-4 py-3 text-xs text-bd-muted">Searching…</div>';
         try {
             const url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=id&accept-language=id,en&q=' + encodeURIComponent(q);
             const res = await fetch(url, { headers: { Accept: 'application/json' } });
@@ -517,13 +517,13 @@
             const results = await res.json();
             box.innerHTML = '';
             if (!results.length) {
-                box.innerHTML = '<div class="px-4 py-3 text-xs text-[#94A898]">No places found. Try a nearby landmark or street name.</div>';
+                box.innerHTML = '<div class="px-4 py-3 text-xs text-bd-muted">No places found. Try a nearby landmark or street name.</div>';
                 return;
             }
             results.forEach(r => {
                 const b = document.createElement('button');
                 b.type = 'button';
-                b.className = 'w-full text-left px-4 py-3 text-xs text-[#F2F7F4] hover:bg-[#1B4323]/60 border-b border-white/10 last:border-0';
+                b.className = 'w-full text-left px-4 py-3 text-xs text-bd-text hover:bg-bd-select/60 border-b border-white/10 last:border-0';
                 b.textContent = r.display_name; // textContent: aman dari HTML dari sumber luar
                 b.addEventListener('click', () => {
                     box.classList.add('hidden');
@@ -575,7 +575,7 @@
         document.querySelectorAll('.pay-method-btn').forEach(btn => {
             const active = btn.dataset.pay === method;
             btn.className = 'pay-method-btn p-4 rounded-2xl border text-center transition ' +
-                (active ? 'border-[#86EFAC] bg-[#1B4323]/60 ring-2 ring-[#86EFAC]/30' : 'border-white/15 bg-[#050806]/60 hover:border-white/30');
+                (active ? 'border-bd-gold bg-bd-select/60 ring-2 ring-bd-gold/30' : 'border-white/15 bg-bd-bg/60 hover:border-white/30');
         });
         const lbl = $('recap-method');
         if (lbl) lbl.textContent = method === 'QRIS' ? 'QRIS (scan QR)' : method + ' bank transfer';
@@ -594,18 +594,18 @@
         let where;
         if (fulfillment === 'delivery') {
             const detail = $('input-address-detail').value.trim();
-            where = '<span class="text-[#86EFAC] font-semibold">Delivery to</span><br>' +
+            where = '<span class="text-bd-gold font-semibold">Delivery to</span><br>' +
                 esc($('input-delivery-address').value.trim()) +
-                (detail ? '<br><span class="text-[#94A898]">Note: ' + esc(detail) + '</span>' : '') +
-                '<br><span class="text-[#94A898]">' + esc($('input-delivery-city').value.trim()) + '</span>';
+                (detail ? '<br><span class="text-bd-muted">Note: ' + esc(detail) + '</span>' : '') +
+                '<br><span class="text-bd-muted">' + esc($('input-delivery-city').value.trim()) + '</span>';
         } else {
-            where = '<span class="text-[#86EFAC] font-semibold">Self-pickup at</span><br>' +
-                esc(CFG.shop.name) + '<br><span class="text-[#94A898]">' + esc(CFG.shop.address) + '</span>';
+            where = '<span class="text-bd-gold font-semibold">Self-pickup at</span><br>' +
+                esc(CFG.shop.name) + '<br><span class="text-bd-muted">' + esc(CFG.shop.address) + '</span>';
         }
         $('recap-receiver').innerHTML =
-            '<p class="font-display-ai text-sm font-bold text-white">' + esc(name) + '</p>' +
-            '<p class="font-mono-ai text-xs text-[#94A898] mb-3">' + esc(phone) + '</p>' +
-            '<p class="text-xs text-[#F2F7F4] leading-relaxed">' + where + '</p>';
+            '<p class="font-display text-sm font-bold text-bd-text">' + esc(name) + '</p>' +
+            '<p class="font-label text-xs text-bd-muted mb-3">' + esc(phone) + '</p>' +
+            '<p class="text-xs text-bd-text leading-relaxed">' + where + '</p>';
         selectPayment(paymentMethod);
     }
 
