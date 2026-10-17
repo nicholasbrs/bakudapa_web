@@ -32,7 +32,7 @@
 
                 <!-- Primary CTA Buttons -->
                 <div class="flex flex-wrap items-center gap-4 pt-2">
-                    <a href="#menu" class="px-7 py-4 rounded-2xl bg-gradient-to-r from-[#4E8752] to-[#1B4323] border border-[#86EFAC]/40 text-white font-semibold text-base shadow-xl shadow-[#4E8752]/25 hover:scale-[1.02] transition flex items-center gap-3">
+                    <a href="{{ route('order.create') }}" class="px-7 py-4 rounded-2xl bg-gradient-to-r from-[#4E8752] to-[#1B4323] border border-[#86EFAC]/40 text-white font-semibold text-base shadow-xl shadow-[#4E8752]/25 hover:scale-[1.02] transition flex items-center gap-3">
                         <span>Order Now</span>
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
@@ -107,8 +107,8 @@
                         <div class="text-xs text-[#94A898]">
                             Pack Size <strong class="text-white">350g (2-3 Servings)</strong> • Lasts 30 days in freezer
                         </div>
-                        <button type="button" id="hero-quick-add-btn" onclick="addToCart(1, 'Cakalang Fufu Rabe Rica', 95000, 'HALAL')" class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-[#4E8752] text-white text-xs font-semibold shrink-0 transition border border-white/15">
-                            + Quick Add
+                        <button type="button" id="hero-quick-add-btn" onclick="quickOrder(1, 'Cakalang Fufu Rabe Rica', 95000, 'HALAL')" class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-[#4E8752] text-white text-xs font-semibold shrink-0 transition border border-white/15">
+                            Order This →
                         </button>
                     </div>
                 </div>
@@ -187,77 +187,85 @@
 </section>
 
 <!-- ==========================================
-     3. SIGNATURE MENU CATALOG
+     3. PROMO & PERKS (menggantikan section menu)
+     Menu lengkap sekarang hanya ada di halaman Order.
 =========================================== -->
-<section id="menu" class="py-16 lg:py-24">
+<section id="promo" class="py-16 lg:py-24">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6 reveal-on-scroll">
-            <div>
-                <span class="font-mono-ai text-xs uppercase tracking-[0.2em] text-[#E2C07D] font-semibold">Baku Dapa Signature</span>
-                <h2 class="font-display-ai text-3xl sm:text-4xl font-bold text-white mt-2">
-                    Ready-to-Ship Manadonese Classics
-                </h2>
-            </div>
+        <div class="mb-10 reveal-on-scroll">
+            <span class="font-mono-ai text-xs uppercase tracking-[0.2em] text-[#E2C07D] font-semibold">Current Offers</span>
+            <h2 class="font-display-ai text-3xl sm:text-4xl font-bold text-white mt-2">
+                Perks That Come With Every Order
+            </h2>
+            <p class="text-sm text-[#94A898] mt-2 max-w-2xl">
+                Pick your dishes on the order page, pin your location on the map, and track your order live from kitchen to doorstep.
+            </p>
+        </div>
 
-            <!-- Filter Buttons -->
-            <div class="inline-flex p-1.5 rounded-2xl bg-[#0D140F]/65 backdrop-blur-md border border-white/10 self-start">
-                <button onclick="filterMenu('all')" data-filter="all" class="menu-filter-btn px-4 py-2 rounded-xl text-xs font-semibold bg-[#4E8752] text-white transition">
-                    All Dishes
-                </button>
-                <button onclick="filterMenu('halal')" data-filter="halal" class="menu-filter-btn px-4 py-2 rounded-xl text-xs font-semibold text-[#94A898] hover:text-white transition">
-                    ✓ 100% Halal
-                </button>
-                <button onclick="filterMenu('non-halal')" data-filter="non-halal" class="menu-filter-btn px-4 py-2 rounded-xl text-xs font-semibold text-[#94A898] hover:text-white transition">
-                    Non-Halal (Pork)
-                </button>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Main banner -->
+            <a href="{{ route('order.create') }}" class="group relative lg:col-span-2 min-h-[320px] rounded-3xl overflow-hidden border border-white/10 flex reveal-on-scroll">
+                <img src="https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=1400&q=80"
+                     alt="Ayam Woku Belanga" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition duration-700">
+                <div class="absolute inset-0 bg-gradient-to-r from-[#050806] via-[#050806]/80 to-transparent"></div>
+                <div class="relative p-8 sm:p-10 flex flex-col justify-end max-w-xl space-y-3">
+                    <span class="self-start font-mono-ai text-[11px] uppercase tracking-wider px-3 py-1 rounded-full bg-[#4E8752] text-white font-semibold">
+                        Free Shipping
+                    </span>
+                    <h3 class="font-display-ai text-3xl sm:text-4xl font-bold text-white leading-tight">
+                        Pick Up at Our Kitchen, Pay Zero Delivery Fee
+                    </h3>
+                    <p class="text-sm text-[#F2F7F4]/80 leading-relaxed">
+                        Choose self-pickup at checkout and skip the delivery fee. We show our exact pin-point on the map so it is easy to find.
+                    </p>
+                    <span class="inline-flex items-center gap-2 text-sm font-semibold text-[#86EFAC] pt-1">
+                        Order for Pickup
+                        <svg class="w-4 h-4 group-hover:translate-x-1 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                    </span>
+                </div>
+            </a>
+
+            <!-- Side banners -->
+            <div class="grid grid-rows-2 gap-6">
+                <a href="{{ route('order.create') }}" class="group relative rounded-3xl overflow-hidden border border-white/10 min-h-[150px] flex reveal-on-scroll delay-100">
+                    <img src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80"
+                         alt="Cakalang Fufu" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition duration-700">
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#050806] via-[#050806]/70 to-[#050806]/20"></div>
+                    <div class="relative p-6 flex flex-col justify-end">
+                        <span class="font-mono-ai text-[10px] uppercase tracking-wider text-[#E2C07D]">Cold-Chain Delivery</span>
+                        <h3 class="font-display-ai text-xl font-bold text-white mt-1">
+                            Flat IDR {{ number_format(config('bakudapa.delivery_fee')) }} Delivery
+                        </h3>
+                        <p class="text-xs text-[#94A898] mt-1">Vacuum-sealed with thermal foil and ice gel.</p>
+                    </div>
+                </a>
+
+                <a href="{{ route('order.create') }}" class="group relative rounded-3xl overflow-hidden border border-white/10 min-h-[150px] flex reveal-on-scroll delay-200">
+                    <img src="https://images.unsplash.com/photo-1514944298352-f4d732142f74?auto=format&fit=crop&w=800&q=80"
+                         alt="Crispy Pork Tore Rica" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition duration-700">
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#050806] via-[#050806]/70 to-[#050806]/20"></div>
+                    <div class="relative p-6 flex flex-col justify-end">
+                        <span class="font-mono-ai text-[10px] uppercase tracking-wider text-[#4ADE80]">Two Separate Kitchens</span>
+                        <h3 class="font-display-ai text-xl font-bold text-white mt-1">Halal &amp; Non-Halal, Clearly Sealed</h3>
+                        <p class="text-xs text-[#94A898] mt-1">Every dish is labeled before you add it to your bag.</p>
+                    </div>
+                </a>
             </div>
         </div>
 
-        <!-- Menu Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
-            @foreach($menus as $index => $item)
-            <div class="glass-card rounded-3xl overflow-hidden flex flex-col menu-item-card reveal-on-scroll" data-category="{{ $item['category'] }}">
-                <div class="relative aspect-[16/11] overflow-hidden">
-                    <img src="{{ $item['image'] }}" alt="{{ $item['name'] }}" class="w-full h-full object-cover hover:scale-105 transition duration-500">
-                    <div class="absolute inset-0 bg-gradient-to-t from-[#050806] via-transparent to-transparent"></div>
-
-                    <!-- Halal / Non-Halal Clear Badge -->
-                    @if($item['category'] === 'halal')
-                        <span class="font-mono-ai absolute top-3 left-3 px-3 py-1 rounded-full bg-[#050806]/85 backdrop-blur-md border border-[#4ADE80]/50 text-[11px] font-semibold text-[#4ADE80] uppercase tracking-wider">
-                            ✓ HALAL • Green Seal
-                        </span>
-                    @else
-                        <span class="font-mono-ai absolute top-3 left-3 px-3 py-1 rounded-full bg-[#050806]/85 backdrop-blur-md border border-[#F59E0B]/60 text-[11px] font-semibold text-[#F59E0B] uppercase tracking-wider">
-                            NON-HALAL • Separate Kitchen
-                        </span>
-                    @endif
-
-                    <span class="font-mono-ai absolute bottom-3 left-3 text-xs font-medium px-2.5 py-1 rounded-lg bg-black/75 text-[#E2C07D]">
-                        {{ $item['weight'] }}
-                    </span>
-                </div>
-
-                <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
-                    <div>
-                        <div class="flex items-center justify-between text-xs text-[#94A898] mb-1.5">
-                            <span class="font-mono-ai text-[11px] text-[#86EFAC]">{{ $item['badge'] }}</span>
-                            <span class="text-[#F97316] font-medium">🌶 {{ $item['spicy'] }}</span>
-                        </div>
-                        <h3 class="font-display-ai text-2xl font-bold text-white">{{ $item['name'] }}</h3>
-                        <p class="text-sm text-[#94A898] mt-2 leading-relaxed">{{ $item['desc'] }}</p>
-                    </div>
-
-                    <div class="pt-4 border-t border-white/10 flex items-center justify-between">
-                        <div>
-                            <span class="text-[11px] text-[#94A898] block">Vacuum Pack Price</span>
-                            <span class="font-mono-ai text-lg font-bold text-white">IDR {{ number_format($item['price'], 0, ',', ',') }}</span>
-                        </div>
-                        <button type="button"
-                                onclick="addToCart({{ $item['id'] }}, '{{ $item['name'] }}', {{ $item['price'] }}, '{{ strtoupper($item['category']) }}')"
-                                class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#4E8752] to-[#1B4323] hover:brightness-110 text-white text-xs font-semibold transition border border-[#86EFAC]/30">
-                            + Order Now
-                        </button>
-                    </div>
+        <!-- How it works -->
+        <div class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            @foreach([
+                ['01', 'Pick your dishes', 'Browse the full menu on the order page.'],
+                ['02', 'Add details & pin location', 'Drop a pin on the map, or choose pickup.'],
+                ['03', 'Pay & track live', 'Upload your receipt and follow every stage.'],
+            ] as $step)
+            <div class="glass-card rounded-2xl p-5 flex items-start gap-4 reveal-on-scroll">
+                <span class="font-mono-ai w-8 h-8 rounded-lg bg-[#4E8752] text-white text-xs font-bold flex items-center justify-center shrink-0">{{ $step[0] }}</span>
+                <div>
+                    <p class="font-display-ai text-sm font-bold text-white">{{ $step[1] }}</p>
+                    <p class="text-xs text-[#94A898] mt-0.5">{{ $step[2] }}</p>
                 </div>
             </div>
             @endforeach

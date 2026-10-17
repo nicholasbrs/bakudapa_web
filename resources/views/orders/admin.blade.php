@@ -52,6 +52,15 @@
                                 {{ $order['customer_name'] }} <span class="font-mono-ai text-xs text-[#94A898]">({{ $order['customer_phone'] }})</span>
                             </p>
                             <p class="text-xs text-[#94A898]">{{ $order['delivery_address'] }}</p>
+                            @if(!empty($order['address_detail']))
+                                <p class="text-xs text-[#E2C07D] mt-0.5">Landmark: {{ $order['address_detail'] }}</p>
+                            @endif
+                            @if($order['fulfillment_type'] === 'delivery' && !empty($order['delivery_lat']) && !empty($order['delivery_lng']))
+                                <a href="https://www.google.com/maps/search/?api=1&query={{ $order['delivery_lat'] }},{{ $order['delivery_lng'] }}" target="_blank" rel="noopener"
+                                   class="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 rounded-lg bg-[#4E8752]/30 border border-[#4E8752]/60 text-[11px] font-semibold text-[#86EFAC] hover:bg-[#4E8752]/50 transition">
+                                    📍 Open pin in Google Maps
+                                </a>
+                            @endif
 
                             <div class="pt-2 border-t border-white/10 text-xs space-y-1">
                                 @foreach($order['items'] as $item)

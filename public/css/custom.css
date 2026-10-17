@@ -207,3 +207,100 @@ body {
 .anim-float { animation: floatIcon 2.4s ease-in-out infinite; }
 .anim-flame { animation: flameFlicker 1.2s ease-in-out infinite; }
 .anim-scooter { animation: scooterMove 1.4s ease-in-out infinite; }
+/* ==========================================================
+   MAP (Leaflet) — dark theme, center pin, markers
+========================================================== */
+.map-dark { background: #0b120d; }
+.map-dark .leaflet-tile-pane {
+    filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.88) saturate(0.7);
+}
+.map-dark .leaflet-control-attribution {
+    background: rgba(5, 8, 6, 0.75);
+    color: #94A898;
+    font-size: 10px;
+}
+.map-dark .leaflet-control-attribution a { color: #86EFAC; }
+.map-dark .leaflet-bar a {
+    background: #0D140F;
+    color: #F2F7F4;
+    border-bottom-color: rgba(255, 255, 255, 0.12);
+}
+.map-dark .leaflet-bar a:hover { background: #1B4323; }
+
+/* GoFood-style fixed pin at the center of the map */
+.map-pin {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: 600;
+    pointer-events: none;
+    width: 0;
+    height: 0;
+}
+.map-pin-inner {
+    position: absolute;
+    left: -20px;
+    bottom: 0;
+    width: 40px;
+    transition: transform 0.18s ease;
+    filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.45));
+}
+.map-pin-shadow {
+    position: absolute;
+    left: -9px;
+    top: -3px;
+    width: 18px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.55);
+    transition: transform 0.18s ease, opacity 0.18s ease;
+}
+.map-pin.is-lifting .map-pin-inner { transform: translateY(-12px); }
+.map-pin.is-lifting .map-pin-shadow { transform: scale(0.6); opacity: 0.5; }
+
+/* Shop marker (pickup map) */
+.shop-marker {
+    width: 44px;
+    height: 44px;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    background: linear-gradient(135deg, #4E8752, #1B4323);
+    border: 2px solid #86EFAC;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.5);
+}
+.shop-marker span { transform: rotate(45deg); font-size: 20px; }
+
+/* Floating bag (order page) */
+@keyframes bagBump {
+    0% { transform: translateX(-50%) scale(1); }
+    40% { transform: translateX(-50%) scale(1.08); }
+    100% { transform: translateX(-50%) scale(1); }
+}
+.bag-bump { animation: bagBump 0.35s ease; }
+
+/* Modal entrance */
+@keyframes modalIn {
+    from { opacity: 0; transform: translateY(14px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.modal-panel { animation: modalIn 0.22s ease; }
+
+/* Toast */
+.bd-toast {
+    position: fixed;
+    left: 50%;
+    bottom: 7rem;
+    transform: translateX(-50%);
+    z-index: 80;
+    padding: 0.75rem 1.1rem;
+    border-radius: 0.9rem;
+    background: #0D140F;
+    border: 1px solid rgba(134, 239, 172, 0.45);
+    color: #F2F7F4;
+    font-size: 0.8rem;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+    max-width: 90vw;
+}

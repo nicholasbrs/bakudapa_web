@@ -2,19 +2,54 @@
 
 @section('title', 'Order & Checkout — BAKU DAPA')
 
+@push('styles')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+@endpush
+
 @section('content')
+@php
+    // Bila validasi server gagal, buka kembali step yang berisi field bermasalah
+    $initialStep = 1;
+    if ($errors->any()) {
+        if ($errors->hasAny(['customer_name', 'customer_phone', 'customer_email', 'delivery_city', 'delivery_address', 'delivery_lat', 'delivery_lng', 'fulfillment_type'])) {
+            $initialStep = 2;
+        } elseif ($errors->hasAny(['cart', 'cart_json'])) {
+            $initialStep = 1;
+        } else {
+            $initialStep = 3;
+        }
+    }
+    $oldFulfillment = old('fulfillment_type', 'delivery');
+    $oldPayment = old('payment_method', 'QRIS');
+    $shopViewUrl = 'https://www.google.com/maps/search/?api=1&query=' . $shop['lat'] . ',' . $shop['lng'];
+    $shopDirUrl = 'https://www.google.com/maps/dir/?api=1&destination=' . $shop['lat'] . ',' . $shop['lng'];
+@endphp
+
 <section class="py-12 lg:py-16">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         <!-- Header -->
-        <div class="mb-10">
+        <div class="mb-8">
             <span class="font-mono-ai text-xs uppercase tracking-[0.2em] text-[#86EFAC] font-semibold">Direct Web Ordering</span>
             <h1 class="font-display-ai text-3xl sm:text-5xl font-bold text-white mt-1">
                 Build Your Order & Checkout
             </h1>
             <p class="text-sm text-[#94A898] mt-2">
-                Select your dishes, choose Delivery or Self-Pickup, and complete your manual payment with live order status tracking.
+                Choose your dishes, pin where you want it delivered (or pick it up), then pay and track your order live.
             </p>
+        </div>
+
+        <!-- Stepper -->
+        <div class="flex items-center max-w-2xl mb-10" id="stepper">
+            @foreach([1 => 'Choose Dishes', 2 => 'Your Details', 3 => 'Payment'] as $n => $label)
+                <div id="step-pill-{{ $n }}" class="flex items-center gap-2.5 shrink-0">
+                    <span class="pill-dot w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold font-mono-ai bg-white/10 text-[#94A898]">{{ sprintf('%02d', $n) }}</span>
+                    <span class="pill-label text-xs font-semibold hidden sm:block text-[#94A898]">{{ $label }}</span>
+                </div>
+                @if($n < 3)
+                    <div id="step-line-{{ $n }}" class="step-line flex-1 h-px mx-2 sm:mx-4 bg-white/15"></div>
+                @endif
+            @endforeach
         </div>
 
         @if($errors->any())
@@ -28,290 +63,440 @@
             </div>
         @endif
 
-        <form action="{{ route('order.store') }}" method="POST" id="checkout-form" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <form action="{{ route('order.store') }}" method="POST" id="checkout-form" novalidate>
             @csrf
             <input type="hidden" name="cart_json" id="cart-json-input">
-            <input type="hidden" name="fulfillment_type" id="fulfillment-type-input" value="{{ old('fulfillment_type', 'delivery') }}">
-            <input type="hidden" name="payment_method" id="payment-method-input" value="{{ old('payment_method', 'QRIS') }}">
+            <input type="hidden" name="fulfillment_type" id="fulfillment-type-input" value="{{ $oldFulfillment }}">
+            <input type="hidden" name="payment_method" id="payment-method-input" value="{{ $oldPayment }}">
+            <input type="hidden" name="delivery_lat" id="delivery-lat" value="{{ old('delivery_lat') }}">
+            <input type="hidden" name="delivery_lng" id="delivery-lng" value="{{ old('delivery_lng') }}">
+            <input type="hidden" name="delivery_place" id="delivery-place" value="{{ old('delivery_place') }}">
 
-            <!-- LEFT COLUMN: 1. Quick Menu Add + 2. Customer Info + 3. Delivery/Pickup + 4. Payment Method -->
-            <div class="lg:col-span-7 space-y-8">
-
-                <!-- STEP 1: SELECT / ADD DISHES -->
-                <div class="glass-card rounded-3xl p-6 sm:p-8">
-                    <div class="flex items-center justify-between mb-5">
-                        <div class="flex items-center gap-3">
-                            <span class="font-mono-ai w-7 h-7 rounded-lg bg-[#4E8752] text-white text-xs font-bold flex items-center justify-center">01</span>
-                            <h2 class="font-display-ai text-xl font-bold text-white">Select Dishes</h2>
-                        </div>
-                        <span class="font-mono-ai text-xs text-[#86EFAC]">Click + to add to your order</span>
+            <!-- =====================================================
+                 STEP 1 — CHOOSE DISHES
+            ====================================================== -->
+            <div id="step-1" class="wizard-step">
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" class="dish-filter-btn" data-filter="ALL" onclick="OrderPage.filter('ALL')">All Dishes</button>
+                        <button type="button" class="dish-filter-btn" data-filter="HALAL" onclick="OrderPage.filter('HALAL')">Halal</button>
+                        <button type="button" class="dish-filter-btn" data-filter="NON-HALAL" onclick="OrderPage.filter('NON-HALAL')">Non-Halal</button>
                     </div>
+                    <p class="font-mono-ai text-xs text-[#86EFAC]">Tap a photo to see the dish bigger</p>
+                </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        @foreach($menus as $menu)
-                        <div class="p-3.5 rounded-2xl bg-[#050806]/70 border border-white/10 hover:border-[#4E8752]/50 transition flex items-center gap-3.5">
-                            <img src="{{ $menu['image'] }}" alt="{{ $menu['name'] }}" class="w-16 h-16 rounded-xl object-cover shrink-0">
-                            <div class="flex-1 min-w-0">
-                                <span class="font-mono-ai text-[10px] px-2 py-0.5 rounded {{ $menu['category'] === 'HALAL' ? 'bg-[#1B4323] text-[#4ADE80]' : 'bg-amber-500/20 text-amber-300' }}">
+                <div id="dish-grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 pb-40">
+                    @foreach($menus as $menu)
+                        <article class="dish-card glass-card rounded-3xl overflow-hidden flex flex-col group" data-category="{{ $menu['category'] }}">
+                            <button type="button" onclick="OrderPage.openDish({{ $menu['id'] }})"
+                                    class="relative block aspect-[4/3] overflow-hidden text-left"
+                                    aria-label="View {{ $menu['name'] }} bigger">
+                                <img src="{{ $menu['image'] }}" alt="{{ $menu['name'] }}" loading="lazy"
+                                     class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
+                                <span class="absolute top-3 left-3 font-mono-ai text-[10px] px-2 py-1 rounded-md font-bold {{ $menu['category'] === 'HALAL' ? 'bg-[#1B4323] text-[#4ADE80]' : 'bg-amber-400 text-[#1a1203]' }}">
                                     {{ $menu['category'] }}
                                 </span>
-                                <h3 class="font-display-ai text-sm font-bold text-white truncate mt-1">{{ $menu['name'] }}</h3>
-                                <div class="flex items-center justify-between mt-1.5">
-                                    <span class="font-mono-ai text-xs text-[#E2C07D]">IDR {{ number_format($menu['price']) }}</span>
-                                    <button type="button"
-                                            onclick="addToCart({{ $menu['id'] }}, '{{ $menu['name'] }}', {{ $menu['price'] }}, '{{ $menu['category'] }}', false)"
-                                            class="px-2.5 py-1 rounded-lg bg-[#4E8752] hover:bg-[#3d6e40] text-white font-mono-ai text-xs font-bold transition">
-                                        + Add
-                                    </button>
+                                <span class="absolute bottom-3 right-3 font-mono-ai text-[10px] px-2.5 py-1 rounded-full bg-black/60 text-white backdrop-blur opacity-0 group-hover:opacity-100 transition">
+                                    View bigger
+                                </span>
+                            </button>
+
+                            <div class="p-5 flex flex-col flex-1">
+                                <span class="font-mono-ai text-[10px] uppercase tracking-wider text-[#E2C07D]">{{ $menu['badge'] }}</span>
+                                <h3 class="font-display-ai text-lg font-bold text-white mt-1">{{ $menu['name'] }}</h3>
+                                <p class="text-xs text-[#94A898] leading-relaxed mt-2 line-clamp-3">{{ $menu['desc'] }}</p>
+                                <p class="font-mono-ai text-[11px] text-[#94A898] mt-3">{{ $menu['weight'] }} · {{ $menu['spicy'] }}</p>
+
+                                <div class="mt-auto pt-4">
+                                    <p class="font-mono-ai text-lg font-bold text-[#E2C07D] mb-3">IDR {{ number_format($menu['price']) }}</p>
+                                    <div data-dish-ctl="{{ $menu['id'] }}"></div>
                                 </div>
                             </div>
-                        </div>
-                        @endforeach
-                    </div>
+                        </article>
+                    @endforeach
                 </div>
 
-                <!-- STEP 2: CUSTOMER DETAILS -->
-                <div class="glass-card rounded-3xl p-6 sm:p-8 space-y-5">
-                    <div class="flex items-center gap-3">
-                        <span class="font-mono-ai w-7 h-7 rounded-lg bg-[#4E8752] text-white text-xs font-bold flex items-center justify-center">02</span>
-                        <h2 class="font-display-ai text-xl font-bold text-white">Customer Information</h2>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-mono-ai uppercase text-[#94A898] mb-2">Full Name *</label>
-                            <input type="text" name="customer_name" value="{{ old('customer_name') }}" required placeholder="e.g. Nicholas Barus"
-                                   class="w-full px-4 py-3 rounded-xl bg-[#050806]/90 border border-white/15 text-sm text-white focus:outline-none focus:border-[#4E8752]">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-mono-ai uppercase text-[#94A898] mb-2">Phone / WhatsApp Number *</label>
-                            <input type="text" name="customer_phone" value="{{ old('customer_phone') }}" required placeholder="e.g. 081234567890"
-                                   class="w-full px-4 py-3 rounded-xl bg-[#050806]/90 border border-white/15 text-sm text-white focus:outline-none focus:border-[#4E8752]">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-mono-ai uppercase text-[#94A898] mb-2">Email Address <span class="text-white/40">(Optional)</span></label>
-                        <input type="email" name="customer_email" value="{{ old('customer_email') }}" placeholder="name@example.com"
-                               class="w-full px-4 py-3 rounded-xl bg-[#050806]/90 border border-white/15 text-sm text-white focus:outline-none focus:border-[#4E8752]">
-                    </div>
-                </div>
-
-                <!-- STEP 3: FULFILLMENT METHOD (DELIVERY VS SELF-PICKUP) -->
-                <div class="glass-card rounded-3xl p-6 sm:p-8 space-y-5">
-                    <div class="flex items-center gap-3">
-                        <span class="font-mono-ai w-7 h-7 rounded-lg bg-[#4E8752] text-white text-xs font-bold flex items-center justify-center">03</span>
-                        <h2 class="font-display-ai text-xl font-bold text-white">Receiving Method (Delivery or Pickup)</h2>
-                    </div>
-
-                    <!-- Interactive Switcher -->
-                    <div class="grid grid-cols-2 gap-4">
-                        <button type="button" id="tab-delivery" onclick="setFulfillment('delivery')"
-                                class="p-4 rounded-2xl border border-[#86EFAC] bg-[#1B4323]/60 text-left transition flex items-start gap-3">
-                            <div class="w-9 h-9 rounded-xl bg-[#4E8752]/40 flex items-center justify-center text-[#86EFAC] shrink-0">
-                                🚚
-                            </div>
-                            <div>
-                                <p class="font-display-ai text-sm font-bold text-white">Courier Delivery</p>
-                                <p class="text-xs text-[#94A898] mt-0.5">Sent to your doorstep (+IDR 25,000 flat cold-chain)</p>
-                            </div>
-                        </button>
-
-                        <button type="button" id="tab-pickup" onclick="setFulfillment('pickup')"
-                                class="p-4 rounded-2xl border border-white/15 bg-[#050806]/60 text-left transition flex items-start gap-3">
-                            <div class="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center text-[#E2C07D] shrink-0">
-                                🏪
-                            </div>
-                            <div>
-                                <p class="font-display-ai text-sm font-bold text-white">Self-Pickup at Kitchen</p>
-                                <p class="text-xs text-[#94A898] mt-0.5">Pick up directly at Baku Dapa (FREE Shipping)</p>
-                            </div>
-                        </button>
-                    </div>
-
-                    <!-- Delivery Address Fields -->
-                    <div id="delivery-fields" class="space-y-4 pt-2">
-                        <div>
-                            <label class="block text-xs font-mono-ai uppercase text-[#94A898] mb-2">City / Regency *</label>
-                            <input type="text" name="delivery_city" id="input-delivery-city" value="{{ old('delivery_city') }}" placeholder="e.g. South Tangerang, Jakarta, Surabaya, Bandung"
-                                   class="w-full px-4 py-3 rounded-xl bg-[#050806]/90 border border-white/15 text-sm text-white focus:outline-none focus:border-[#4E8752]">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-mono-ai uppercase text-[#94A898] mb-2">Complete Delivery Address *</label>
-                            <textarea name="delivery_address" id="input-delivery-address" rows="3" placeholder="Street name, house/unit number, district, postal code..."
-                                      class="w-full px-4 py-3 rounded-xl bg-[#050806]/90 border border-white/15 text-sm text-white focus:outline-none focus:border-[#4E8752]">{{ old('delivery_address') }}</textarea>
-                        </div>
-                    </div>
-
-                    <!-- Self-Pickup Placeholder Box -->
-                    <div id="pickup-fields" class="hidden pt-2">
-                        <div class="p-5 rounded-2xl bg-[#1B4323]/35 border border-[#4E8752]/50 space-y-2">
-                            <div class="flex items-center justify-between">
-                                <span class="font-mono-ai text-xs uppercase tracking-wider text-[#86EFAC] font-semibold">📍 Baku Dapa Pickup Point (Placeholder)</span>
-                                <span class="font-mono-ai text-xs px-2.5 py-0.5 rounded-full bg-[#4E8752] text-white">FREE PICKUP</span>
-                            </div>
-                            <p class="font-display-ai text-base font-bold text-white">Baku Dapa Central Kitchen & Experience Hub</p>
-                            <p class="text-xs text-[#F2F7F4] leading-relaxed">
-                                Jl. Sam Ratulangi No. 88, Menteng, Central Jakarta 10350 (Placeholder Address — Operating Hours: 09:00 - 20:00 WIB)
-                            </p>
-                            <p class="text-[11px] text-[#E2C07D]">
-                                * Show your Order Code when our tracker status turns into "Ready for Pickup".
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- Order Notes -->
-                    <div>
-                        <label class="block text-xs font-mono-ai uppercase text-[#94A898] mb-2">Order Notes <span class="text-white/40">(Optional)</span></label>
-                        <input type="text" name="notes" value="{{ old('notes') }}" placeholder="e.g. Extra spicy dabu-dabu, send at 12 PM, separate chili..."
-                               class="w-full px-4 py-3 rounded-xl bg-[#050806]/90 border border-white/15 text-sm text-white focus:outline-none focus:border-[#4E8752]">
-                    </div>
-                </div>
-
-                <!-- STEP 4: SELECT MANUAL PAYMENT METHOD -->
-                <div class="glass-card rounded-3xl p-6 sm:p-8 space-y-5">
-                    <div class="flex items-center gap-3">
-                        <span class="font-mono-ai w-7 h-7 rounded-lg bg-[#4E8752] text-white text-xs font-bold flex items-center justify-center">04</span>
-                        <h2 class="font-display-ai text-xl font-bold text-white">Select Payment Method</h2>
-                    </div>
-
-                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                        @foreach(['QRIS', 'BCA', 'MANDIRI', 'BRI', 'BNI'] as $method)
-                        <button type="button" onclick="selectPayment('{{ $method }}')" data-pay="{{ $method }}"
-                                class="pay-method-btn p-3.5 rounded-2xl border {{ $loop->first ? 'border-[#86EFAC] bg-[#1B4323]/60' : 'border-white/15 bg-[#050806]/60' }} text-center transition">
-                            <span class="font-mono-ai text-sm font-bold text-white block">{{ $method }}</span>
-                            <span class="text-[10px] text-[#94A898] block mt-0.5">{{ $method === 'QRIS' ? 'Scan QR' : 'Bank Transfer' }}</span>
-                        </button>
-                        @endforeach
-                    </div>
-                    <p class="text-xs text-[#94A898]">
-                        * Account number / QRIS code and receipt upload dropzone will be shown immediately on the next screen after you lock your order.
-                    </p>
-                </div>
-
+                <!-- Floating Bag (tengah bawah, tidak terlalu ke dasar layar) -->
+                <button type="button" id="floating-bag" onclick="OrderPage.openBag()"
+                        class="fixed bottom-10 left-1/2 -translate-x-1/2 z-40 flex items-center gap-4 pl-5 pr-3 py-3 rounded-full bg-gradient-to-r from-[#4E8752] to-[#1B4323] border border-[#86EFAC]/50 text-white shadow-2xl shadow-black/60 hover:brightness-110 transition">
+                    <svg class="w-6 h-6 text-[#86EFAC]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                    <span class="text-left leading-tight">
+                        <span class="block font-display-ai text-sm font-bold">
+                            <span data-cart-count>0</span> <span id="floating-bag-label">items</span> in bag
+                        </span>
+                        <span id="floating-bag-total" class="block font-mono-ai text-[11px] text-[#CFE9D6]">IDR 0</span>
+                    </span>
+                    <span class="px-4 py-2 rounded-full bg-white/15 text-xs font-bold">View Bag →</span>
+                </button>
             </div>
 
-            <!-- RIGHT COLUMN: LIVE ORDER SUMMARY -->
-            <div class="lg:col-span-5 lg:sticky lg:top-28">
-                <div class="glass-card rounded-3xl p-6 sm:p-8 space-y-6">
-                    <div class="flex items-center justify-between border-b border-white/10 pb-4">
-                        <h2 class="font-display-ai text-2xl font-bold text-white">Order Summary</h2>
-                        <span id="checkout-item-count" class="font-mono-ai text-xs px-3 py-1 rounded-full bg-[#1B4323] text-[#86EFAC]">0 Items</span>
+            <!-- =====================================================
+                 STEP 2 — YOUR DETAILS + RECEIVING METHOD
+            ====================================================== -->
+            <div id="step-2" class="wizard-step hidden">
+                <div class="flex flex-wrap items-end justify-between gap-3 mb-6">
+                    <div>
+                        <h2 class="font-display-ai text-2xl sm:text-3xl font-bold text-white">Where should we bring it?</h2>
+                        <p class="text-sm text-[#94A898] mt-1">Tell us who you are, then choose delivery or pickup.</p>
+                    </div>
+                    <button type="button" onclick="OrderPage.goStep(1)" class="text-xs font-mono-ai text-[#86EFAC] hover:text-white transition">← Edit order</button>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+                    <!-- LEFT: customer + receiving method -->
+                    <div class="lg:col-span-5 space-y-6">
+
+                        <div class="glass-card rounded-3xl p-6 sm:p-8 space-y-5">
+                            <div class="flex items-center gap-3">
+                                <span class="font-mono-ai w-7 h-7 rounded-lg bg-[#4E8752] text-white text-xs font-bold flex items-center justify-center">A</span>
+                                <h3 class="font-display-ai text-xl font-bold text-white">Customer Information</h3>
+                            </div>
+
+                            <div>
+                                <label for="f-name" class="block text-xs font-mono-ai uppercase text-[#94A898] mb-2">Full Name *</label>
+                                <input type="text" id="f-name" name="customer_name" value="{{ old('customer_name') }}" placeholder="e.g. Nicholas Barus" autocomplete="name"
+                                       class="w-full px-4 py-3 rounded-xl bg-[#050806]/90 border border-white/15 text-sm text-white focus:outline-none focus:border-[#4E8752]">
+                                <p data-err="name" class="hidden text-xs text-red-400 mt-1.5"></p>
+                            </div>
+                            <div>
+                                <label for="f-phone" class="block text-xs font-mono-ai uppercase text-[#94A898] mb-2">Phone / WhatsApp Number *</label>
+                                <input type="tel" id="f-phone" name="customer_phone" value="{{ old('customer_phone') }}" placeholder="e.g. 081234567890" autocomplete="tel"
+                                       class="w-full px-4 py-3 rounded-xl bg-[#050806]/90 border border-white/15 text-sm text-white focus:outline-none focus:border-[#4E8752]">
+                                <p data-err="phone" class="hidden text-xs text-red-400 mt-1.5"></p>
+                            </div>
+                            <div>
+                                <label for="f-email" class="block text-xs font-mono-ai uppercase text-[#94A898] mb-2">Email Address <span class="text-white/40">(Optional)</span></label>
+                                <input type="email" id="f-email" name="customer_email" value="{{ old('customer_email') }}" placeholder="name@example.com" autocomplete="email"
+                                       class="w-full px-4 py-3 rounded-xl bg-[#050806]/90 border border-white/15 text-sm text-white focus:outline-none focus:border-[#4E8752]">
+                                <p data-err="email" class="hidden text-xs text-red-400 mt-1.5"></p>
+                            </div>
+                        </div>
+
+                        <div class="glass-card rounded-3xl p-6 sm:p-8 space-y-5">
+                            <div class="flex items-center gap-3">
+                                <span class="font-mono-ai w-7 h-7 rounded-lg bg-[#4E8752] text-white text-xs font-bold flex items-center justify-center">B</span>
+                                <h3 class="font-display-ai text-xl font-bold text-white">Receiving Method</h3>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <button type="button" id="tab-delivery" onclick="OrderPage.setFulfillment('delivery')"
+                                        class="p-4 rounded-2xl border border-[#86EFAC] bg-[#1B4323]/60 text-left transition flex items-start gap-3">
+                                    <div class="w-9 h-9 rounded-xl bg-[#4E8752]/40 flex items-center justify-center text-[#86EFAC] shrink-0">🚚</div>
+                                    <div>
+                                        <p class="font-display-ai text-sm font-bold text-white">Courier Delivery</p>
+                                        <p class="text-xs text-[#94A898] mt-0.5">Pin your address on the map (+IDR {{ number_format($deliveryFee) }} flat cold-chain)</p>
+                                    </div>
+                                </button>
+                                <button type="button" id="tab-pickup" onclick="OrderPage.setFulfillment('pickup')"
+                                        class="p-4 rounded-2xl border border-white/15 bg-[#050806]/60 text-left transition flex items-start gap-3">
+                                    <div class="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center text-[#E2C07D] shrink-0">🏪</div>
+                                    <div>
+                                        <p class="font-display-ai text-sm font-bold text-white">Self-Pickup</p>
+                                        <p class="text-xs text-[#94A898] mt-0.5">Collect at our kitchen (FREE shipping)</p>
+                                    </div>
+                                </button>
+                            </div>
+
+                            <div>
+                                <label for="f-notes" class="block text-xs font-mono-ai uppercase text-[#94A898] mb-2">Order Notes <span class="text-white/40">(Optional)</span></label>
+                                <input type="text" id="f-notes" name="notes" value="{{ old('notes') }}" placeholder="e.g. Extra spicy dabu-dabu, send at 12 PM..."
+                                       class="w-full px-4 py-3 rounded-xl bg-[#050806]/90 border border-white/15 text-sm text-white focus:outline-none focus:border-[#4E8752]">
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Selected Items List -->
-                    <div id="checkout-items-list" class="space-y-3 max-h-80 overflow-y-auto pr-1">
-                        <!-- Populated by JS -->
-                    </div>
+                    <!-- RIGHT: map panels -->
+                    <div class="lg:col-span-7 lg:sticky lg:top-28">
 
-                    <!-- Price Breakdown -->
-                    <div class="border-t border-white/10 pt-4 space-y-2.5 text-sm">
-                        <div class="flex justify-between text-[#94A898]">
-                            <span>Dishes Subtotal</span>
-                            <span id="summary-subtotal" class="font-mono-ai text-white">IDR 0</span>
+                        <!-- DELIVERY: pin point (GoFood-style) -->
+                        <div id="delivery-panel" class="glass-card rounded-3xl p-6 sm:p-8 space-y-4">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <h3 class="font-display-ai text-xl font-bold text-white">Pin your delivery location</h3>
+                                <span id="pin-status" class="font-mono-ai text-[11px] px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300">○ Move the map to set your pin</span>
+                            </div>
+
+                            <div id="map-search-wrap" class="relative">
+                                <div class="flex gap-2">
+                                    <input type="text" id="map-search" placeholder="Search a street, building or landmark..."
+                                           class="flex-1 min-w-0 px-4 py-3 rounded-xl bg-[#050806]/90 border border-white/15 text-sm text-white focus:outline-none focus:border-[#4E8752]">
+                                    <button type="button" onclick="OrderPage.searchPlace()"
+                                            class="px-5 rounded-xl bg-[#4E8752] hover:bg-[#3d6e40] text-white text-sm font-semibold transition">Search</button>
+                                </div>
+                                <div id="map-search-results" class="hidden absolute left-0 right-0 top-full mt-2 z-50 rounded-xl overflow-hidden bg-[#0D140F] border border-white/15 shadow-2xl"></div>
+                            </div>
+
+                            <div class="relative isolate rounded-2xl overflow-hidden border border-white/15">
+                                <div id="delivery-map" class="map-dark h-[360px] sm:h-[430px] w-full"></div>
+
+                                <div id="center-pin" class="map-pin" aria-hidden="true">
+                                    <div class="map-pin-shadow"></div>
+                                    <div class="map-pin-inner">
+                                        <svg viewBox="0 0 40 52" width="40" height="52"><path d="M20 1C9.5 1 1 9.2 1 19.5 1 33.5 20 51 20 51s19-17.5 19-31.5C39 9.2 30.5 1 20 1z" fill="#4E8752" stroke="#86EFAC" stroke-width="2"/><circle cx="20" cy="19.5" r="7" fill="#F2F7F4"/></svg>
+                                    </div>
+                                </div>
+
+                                <button type="button" id="btn-my-location" onclick="OrderPage.useMyLocation()"
+                                        class="absolute bottom-3 left-3 z-[650] flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-[#0D140F]/95 border border-white/20 text-xs font-semibold text-white hover:border-[#86EFAC] transition shadow-lg">
+                                    <span class="text-[#86EFAC]">◎</span> Use my location
+                                </button>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-[#050806]/70 border border-white/10">
+                                <p class="font-mono-ai text-[10px] uppercase tracking-wider text-[#86EFAC] mb-1">Detected address</p>
+                                <p id="pin-detected" class="text-xs leading-relaxed text-[#94A898]">Move the map so the pin sits on your door, or search above. We will fill in the address for you.</p>
+                            </div>
+                            <p data-err="pin" class="hidden text-xs text-red-400"></p>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+                                <div class="sm:col-span-1">
+                                    <label for="input-delivery-city" class="block text-xs font-mono-ai uppercase text-[#94A898] mb-2">City / Regency *</label>
+                                    <input type="text" name="delivery_city" id="input-delivery-city" value="{{ old('delivery_city') }}" placeholder="e.g. Jakarta"
+                                           class="w-full px-4 py-3 rounded-xl bg-[#050806]/90 border border-white/15 text-sm text-white focus:outline-none focus:border-[#4E8752]">
+                                    <p data-err="city" class="hidden text-xs text-red-400 mt-1.5"></p>
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <label for="input-address-detail" class="block text-xs font-mono-ai uppercase text-[#94A898] mb-2">Landmark / Floor / Unit <span class="text-white/40">(Optional)</span></label>
+                                    <input type="text" name="address_detail" id="input-address-detail" value="{{ old('address_detail') }}" placeholder="e.g. Blue gate, 2nd floor, next to the minimarket"
+                                           class="w-full px-4 py-3 rounded-xl bg-[#050806]/90 border border-white/15 text-sm text-white focus:outline-none focus:border-[#4E8752]">
+                                </div>
+                            </div>
+                            <div>
+                                <label for="input-delivery-address" class="block text-xs font-mono-ai uppercase text-[#94A898] mb-2">Complete Delivery Address *</label>
+                                <textarea name="delivery_address" id="input-delivery-address" rows="3" placeholder="Street name, house/unit number, district, postal code..."
+                                          class="w-full px-4 py-3 rounded-xl bg-[#050806]/90 border border-white/15 text-sm text-white focus:outline-none focus:border-[#4E8752]">{{ old('delivery_address') }}</textarea>
+                                <p data-err="address" class="hidden text-xs text-red-400 mt-1.5"></p>
+                            </div>
                         </div>
-                        <div class="flex justify-between text-[#94A898]">
-                            <span id="summary-shipping-label">Cold-Chain Delivery Fee</span>
-                            <span id="summary-shipping" class="font-mono-ai text-white">IDR 25,000</span>
-                        </div>
-                        <div class="flex justify-between text-base font-bold text-white pt-3 border-t border-white/10">
-                            <span>Estimated Total</span>
-                            <span id="summary-grand-total" class="font-mono-ai text-xl text-[#86EFAC]">IDR 0</span>
+
+                        <!-- PICKUP: lokasi toko -->
+                        <div id="pickup-panel" class="hidden glass-card rounded-3xl p-6 sm:p-8 space-y-5">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <h3 class="font-display-ai text-xl font-bold text-white">Our pickup point</h3>
+                                <span class="font-mono-ai text-xs px-2.5 py-0.5 rounded-full bg-[#4E8752] text-white">FREE PICKUP</span>
+                            </div>
+
+                            <div class="relative isolate rounded-2xl overflow-hidden border border-white/15">
+                                <div id="pickup-map" class="map-dark h-[320px] sm:h-[380px] w-full"></div>
+                            </div>
+
+                            <div class="p-5 rounded-2xl bg-[#1B4323]/35 border border-[#4E8752]/50 space-y-1.5">
+                                <p class="font-display-ai text-base font-bold text-white">{{ $shop['name'] }}</p>
+                                <p class="text-xs text-[#F2F7F4] leading-relaxed">{{ $shop['address'] }}</p>
+                                <p class="font-mono-ai text-[11px] text-[#E2C07D]">Open daily · {{ $shop['hours'] }}</p>
+                            </div>
+
+                            <div class="flex flex-wrap gap-3">
+                                <a href="{{ $shopViewUrl }}" target="_blank" rel="noopener"
+                                   class="px-4 py-2.5 rounded-xl bg-[#4E8752] hover:bg-[#3d6e40] text-white text-xs font-semibold transition">Open in Google Maps</a>
+                                <a href="{{ $shopDirUrl }}" target="_blank" rel="noopener"
+                                   class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white text-xs font-semibold transition">Get Directions</a>
+                                <button type="button" onclick="OrderPage.copyShopAddress()"
+                                        class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white text-xs font-semibold transition">Copy Address</button>
+                            </div>
+                            <p class="text-[11px] text-[#E2C07D]">* Show your Order Code when your tracker status turns into "Ready for Pickup".</p>
                         </div>
                     </div>
+                </div>
 
-                    <button type="submit" class="w-full py-4 rounded-2xl bg-gradient-to-r from-[#4E8752] to-[#1B4323] border border-[#86EFAC]/40 text-white font-display-ai font-bold text-base shadow-xl shadow-[#4E8752]/25 hover:scale-[1.01] transition">
-                        Place Order & Proceed to Payment →
+                <!-- Action bar -->
+                <div class="mt-8 glass-card rounded-3xl p-5 sm:p-6 flex flex-wrap items-center justify-between gap-4">
+                    <button type="button" onclick="OrderPage.goStep(1)"
+                            class="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white text-sm font-semibold transition">← Back to dishes</button>
+                    <div class="text-right">
+                        <p class="font-mono-ai text-[11px] text-[#94A898]">Estimated total <span id="step2-total-note"></span></p>
+                        <p id="step2-total" class="font-mono-ai text-xl font-bold text-[#86EFAC]">IDR 0</p>
+                    </div>
+                    <button type="button" onclick="OrderPage.toPayment()"
+                            class="px-7 py-3.5 rounded-2xl bg-gradient-to-r from-[#4E8752] to-[#1B4323] border border-[#86EFAC]/40 text-white font-display-ai font-bold text-sm shadow-xl shadow-[#4E8752]/25 hover:scale-[1.01] transition">
+                        Continue to Payment →
                     </button>
                 </div>
             </div>
 
+            <!-- =====================================================
+                 STEP 3 — PAYMENT METHOD + FINAL SUMMARY
+            ====================================================== -->
+            <div id="step-3" class="wizard-step hidden">
+                <div class="flex flex-wrap items-end justify-between gap-3 mb-6">
+                    <div>
+                        <h2 class="font-display-ai text-2xl sm:text-3xl font-bold text-white">Choose how you will pay</h2>
+                        <p class="text-sm text-[#94A898] mt-1">After you place the order, you get the account number / QRIS and can upload your receipt.</p>
+                    </div>
+                    <button type="button" onclick="OrderPage.goStep(2)" class="text-xs font-mono-ai text-[#86EFAC] hover:text-white transition">← Edit details</button>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    <div class="lg:col-span-7 space-y-6">
+                        <div class="glass-card rounded-3xl p-6 sm:p-8 space-y-5">
+                            <h3 class="font-display-ai text-xl font-bold text-white">Payment Method</h3>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                @foreach(['QRIS', 'BCA', 'MANDIRI', 'BRI', 'BNI'] as $method)
+                                    <button type="button" onclick="OrderPage.selectPayment('{{ $method }}')" data-pay="{{ $method }}"
+                                            class="pay-method-btn p-4 rounded-2xl border border-white/15 bg-[#050806]/60 text-center transition">
+                                        <span class="font-mono-ai text-sm font-bold text-white block">{{ $method }}</span>
+                                        <span class="text-[10px] text-[#94A898] block mt-0.5">{{ $method === 'QRIS' ? 'Scan QR' : 'Bank Transfer' }}</span>
+                                    </button>
+                                @endforeach
+                            </div>
+                            <p class="text-xs text-[#94A898]">
+                                Selected: <strong id="recap-method" class="text-white">QRIS</strong>. Payment is verified manually by our team; once verified, your live order tracker unlocks automatically.
+                            </p>
+                        </div>
+
+                        <div class="glass-card rounded-3xl p-6 sm:p-8">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="font-display-ai text-xl font-bold text-white">Receiving Details</h3>
+                                <button type="button" onclick="OrderPage.goStep(2)" class="text-xs font-mono-ai text-[#86EFAC] hover:text-white transition">Edit</button>
+                            </div>
+                            <div id="recap-receiver"></div>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-5 lg:sticky lg:top-28">
+                        <div class="glass-card rounded-3xl p-6 sm:p-8 space-y-5">
+                            <div class="flex items-center justify-between border-b border-white/10 pb-4">
+                                <h3 class="font-display-ai text-2xl font-bold text-white">Order Summary</h3>
+                                <button type="button" onclick="OrderPage.goStep(1)" class="text-xs font-mono-ai text-[#86EFAC] hover:text-white transition">Edit</button>
+                            </div>
+
+                            <div id="recap-items" class="max-h-72 overflow-y-auto pr-1"></div>
+
+                            <div class="border-t border-white/10 pt-4 space-y-2.5 text-sm">
+                                <div class="flex justify-between text-[#94A898]">
+                                    <span>Dishes Subtotal</span>
+                                    <span id="recap-subtotal" class="font-mono-ai text-white">IDR 0</span>
+                                </div>
+                                <div class="flex justify-between text-[#94A898]">
+                                    <span id="recap-shipping-label">Cold-Chain Delivery Fee</span>
+                                    <span id="recap-shipping" class="font-mono-ai text-white">IDR 0</span>
+                                </div>
+                                <div class="flex justify-between text-base font-bold text-white pt-3 border-t border-white/10">
+                                    <span>Estimated Total</span>
+                                    <span id="recap-total" class="font-mono-ai text-xl text-[#86EFAC]">IDR 0</span>
+                                </div>
+                                <p class="text-[11px] text-[#94A898] leading-relaxed">
+                                    A 3-digit unique code is added to your total when the order is created, so we can match your transfer. The exact amount is shown on the next screen.
+                                </p>
+                            </div>
+
+                            <button type="submit" id="place-order-btn"
+                                    class="w-full py-4 rounded-2xl bg-gradient-to-r from-[#4E8752] to-[#1B4323] border border-[#86EFAC]/40 text-white font-display-ai font-bold text-base shadow-xl shadow-[#4E8752]/25 hover:scale-[1.01] transition disabled:opacity-60 disabled:cursor-wait">
+                                Place Order & Get Payment Details →
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </form>
     </div>
 </section>
 
-@push('scripts')
-<script>
-    let currentFulfillment = '{{ old('fulfillment_type', 'delivery') }}';
+<!-- =========================================================
+     MODAL: BAG (edit -> reconfirm)
+========================================================== -->
+<div id="bag-modal" class="hidden fixed inset-0 z-[70] flex items-end sm:items-center justify-center sm:p-6" role="dialog" aria-modal="true" aria-labelledby="bag-title">
+    <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="OrderPage.closeBag()"></div>
 
-    function setFulfillment(type) {
-        currentFulfillment = type;
-        document.getElementById('fulfillment-type-input').value = type;
+    <div class="modal-panel relative w-full sm:max-w-lg max-h-[92vh] flex flex-col rounded-t-3xl sm:rounded-3xl bg-[#0D140F] border border-white/15 shadow-2xl">
 
-        const tabDelivery = document.getElementById('tab-delivery');
-        const tabPickup = document.getElementById('tab-pickup');
-        const deliveryFields = document.getElementById('delivery-fields');
-        const pickupFields = document.getElementById('pickup-fields');
-
-        if (type === 'delivery') {
-            tabDelivery.className = 'p-4 rounded-2xl border border-[#86EFAC] bg-[#1B4323]/60 text-left transition flex items-start gap-3';
-            tabPickup.className = 'p-4 rounded-2xl border border-white/15 bg-[#050806]/60 text-left transition flex items-start gap-3';
-            deliveryFields.classList.remove('hidden');
-            pickupFields.classList.add('hidden');
-        } else {
-            tabPickup.className = 'p-4 rounded-2xl border border-[#86EFAC] bg-[#1B4323]/60 text-left transition flex items-start gap-3';
-            tabDelivery.className = 'p-4 rounded-2xl border border-white/15 bg-[#050806]/60 text-left transition flex items-start gap-3';
-            deliveryFields.classList.add('hidden');
-            pickupFields.classList.remove('hidden');
-        }
-        syncCheckoutPage();
-    }
-
-    function selectPayment(method) {
-        document.getElementById('payment-method-input').value = method;
-        document.querySelectorAll('.pay-method-btn').forEach(btn => {
-            if (btn.dataset.pay === method) {
-                btn.className = 'pay-method-btn p-3.5 rounded-2xl border border-[#86EFAC] bg-[#1B4323]/60 text-center transition';
-            } else {
-                btn.className = 'pay-method-btn p-3.5 rounded-2xl border border-white/15 bg-[#050806]/60 text-center transition';
-            }
-        });
-    }
-
-    window.syncCheckoutPage = function() {
-        const listEl = document.getElementById('checkout-items-list');
-        const countEl = document.getElementById('checkout-item-count');
-        const subEl = document.getElementById('summary-subtotal');
-        const shipEl = document.getElementById('summary-shipping');
-        const grandEl = document.getElementById('summary-grand-total');
-        const jsonInput = document.getElementById('cart-json-input');
-
-        jsonInput.value = JSON.stringify(cart);
-
-        const totalQty = cart.reduce((s, i) => s + i.qty, 0);
-        const subtotal = cart.reduce((s, i) => s + (i.price * i.qty), 0);
-        const shipping = (currentFulfillment === 'delivery' && subtotal > 0) ? 25000 : 0;
-
-        countEl.textContent = `${totalQty} Items`;
-        subEl.textContent = 'IDR ' + subtotal.toLocaleString('en-US');
-        shipEl.textContent = shipping === 0 ? 'FREE' : 'IDR ' + shipping.toLocaleString('en-US');
-        grandEl.textContent = 'IDR ' + (subtotal + shipping).toLocaleString('en-US');
-
-        if (cart.length === 0) {
-            listEl.innerHTML = `<div class="p-6 rounded-2xl bg-[#050806]/60 border border-white/10 text-center text-xs text-[#94A898]">No dishes selected yet. Click <strong>+ Add</strong> on the dishes on the left.</div>`;
-            return;
-        }
-
-        listEl.innerHTML = cart.map(item => `
-            <div class="p-3.5 rounded-2xl bg-[#050806]/80 border border-white/10 flex items-center justify-between gap-3">
+        <!-- View 1: edit bag -->
+        <div id="bag-view-edit" class="flex flex-col min-h-0">
+            <div class="flex items-start justify-between p-6 pb-4 border-b border-white/10">
                 <div>
-                    <span class="font-mono-ai text-[10px] text-[#86EFAC]">${item.category}</span>
-                    <h4 class="font-display-ai text-sm font-bold text-white">${item.name}</h4>
-                    <p class="font-mono-ai text-xs text-[#94A898]">IDR ${(item.price * item.qty).toLocaleString('en-US')}</p>
+                    <h3 id="bag-title" class="font-display-ai text-2xl font-bold text-white">Your Bag</h3>
+                    <p id="bag-count-label" class="font-mono-ai text-xs text-[#86EFAC] mt-0.5">0 items</p>
                 </div>
-                <div class="flex items-center gap-2">
-                    <button type="button" onclick="updateCartQty(${item.id}, -1)" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs">-</button>
-                    <span class="font-mono-ai text-xs w-5 text-center">${item.qty}</span>
-                    <button type="button" onclick="updateCartQty(${item.id}, 1)" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs">+</button>
+                <button type="button" onclick="OrderPage.closeBag()" class="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-white" aria-label="Close">✕</button>
+            </div>
+            <div id="bag-items" class="px-6 py-4 overflow-y-auto space-y-3 min-h-[120px]"></div>
+            <div class="p-6 pt-4 border-t border-white/10 space-y-4">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-[#94A898]">Dishes subtotal</span>
+                    <span id="bag-subtotal" class="font-mono-ai text-lg font-bold text-[#86EFAC]">IDR 0</span>
+                </div>
+                <p class="text-[11px] text-[#94A898]">Delivery fee is added in the next step, only if you choose delivery.</p>
+                <div class="grid grid-cols-2 gap-3">
+                    <button type="button" onclick="OrderPage.closeBag()"
+                            class="py-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white text-sm font-semibold transition">Keep browsing</button>
+                    <button type="button" id="bag-checkout-btn" onclick="OrderPage.bagToConfirm()"
+                            class="py-3 rounded-xl bg-gradient-to-r from-[#4E8752] to-[#1B4323] border border-[#86EFAC]/40 text-white text-sm font-bold transition">Checkout →</button>
                 </div>
             </div>
-        `).join('');
-    };
+        </div>
 
-    document.addEventListener('DOMContentLoaded', () => {
-        setFulfillment(currentFulfillment);
-        syncCheckoutPage();
-    });
-</script>
-@endpush
+        <!-- View 2: reconfirm -->
+        <div id="bag-view-confirm" class="hidden flex flex-col min-h-0">
+            <div class="p-6 pb-4 border-b border-white/10">
+                <p class="font-mono-ai text-[11px] uppercase tracking-wider text-[#E2C07D]">One last check</p>
+                <h3 class="font-display-ai text-2xl font-bold text-white mt-1">Is your order correct?</h3>
+                <p class="text-xs text-[#94A898] mt-1">Please review your dishes before you fill in your details.</p>
+            </div>
+            <div id="confirm-items" class="px-6 py-3 overflow-y-auto"></div>
+            <div class="p-6 pt-4 border-t border-white/10 space-y-4">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-[#94A898]"><span id="confirm-count">0 items</span> · subtotal</span>
+                    <span id="confirm-subtotal" class="font-mono-ai text-lg font-bold text-[#86EFAC]">IDR 0</span>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <button type="button" onclick="OrderPage.backToEdit()"
+                            class="py-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white text-sm font-semibold transition">← Edit order</button>
+                    <button type="button" onclick="OrderPage.confirmOrder()"
+                            class="py-3 rounded-xl bg-gradient-to-r from-[#4E8752] to-[#1B4323] border border-[#86EFAC]/40 text-white text-sm font-bold transition">Yes, continue →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================
+     MODAL: DISH QUICK VIEW (foto besar)
+========================================================== -->
+<div id="dish-modal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-8" role="dialog" aria-modal="true">
+    <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="OrderPage.closeDish()"></div>
+    <div class="modal-panel relative w-full max-w-4xl max-h-[92vh] overflow-y-auto grid md:grid-cols-2 rounded-3xl overflow-hidden bg-[#0D140F] border border-white/15 shadow-2xl">
+        <button type="button" onclick="OrderPage.closeDish()" class="absolute top-3 right-3 z-10 w-9 h-9 rounded-xl bg-black/60 hover:bg-black/80 text-white" aria-label="Close">✕</button>
+        <img id="dish-modal-img" src="" alt="" class="w-full h-64 md:h-full object-cover">
+        <div class="p-6 sm:p-8 flex flex-col gap-4">
+            <div>
+                <span id="dish-modal-cat" class="font-mono-ai text-[10px] px-2 py-0.5 rounded">HALAL</span>
+                <h3 id="dish-modal-name" class="font-display-ai text-2xl sm:text-3xl font-bold text-white mt-3"></h3>
+            </div>
+            <p id="dish-modal-desc" class="text-sm text-[#94A898] leading-relaxed"></p>
+            <div class="grid grid-cols-2 gap-3">
+                <div class="p-3 rounded-xl bg-[#050806]/70 border border-white/10">
+                    <p class="font-mono-ai text-[10px] uppercase text-[#94A898]">Portion</p>
+                    <p id="dish-modal-weight" class="text-xs text-white mt-1"></p>
+                </div>
+                <div class="p-3 rounded-xl bg-[#050806]/70 border border-white/10">
+                    <p class="font-mono-ai text-[10px] uppercase text-[#94A898]">Flavor</p>
+                    <p id="dish-modal-spicy" class="text-xs text-white mt-1"></p>
+                </div>
+            </div>
+            <div class="mt-auto pt-2">
+                <p id="dish-modal-price" class="font-mono-ai text-2xl font-bold text-[#E2C07D] mb-3"></p>
+                <div id="dish-modal-ctl" data-dish-ctl=""></div>
+                <button type="button" onclick="OrderPage.closeDish()" class="w-full mt-3 py-2.5 rounded-xl text-xs font-semibold text-[#94A898] hover:text-white transition">Back to menu</button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
+
+@push('scripts')
+<script>
+    window.ORDER_PAGE = {
+        menus: @json($menus),
+        shop: @json($shop),
+        deliveryFee: {{ (int) $deliveryFee }},
+        initialStep: {{ (int) $initialStep }},
+        old: {
+            fulfillment: @json($oldFulfillment),
+            payment: @json($oldPayment)
+        }
+    };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script src="{{ asset('js/bd-map.js') }}"></script>
+<script src="{{ asset('js/order-wizard.js') }}"></script>
+@endpush

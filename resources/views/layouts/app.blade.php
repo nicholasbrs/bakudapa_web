@@ -15,6 +15,7 @@
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
+    @stack('styles')
 </head>
 <body class="bg-[#050806] text-[#F2F7F4] antialiased selection:bg-[#4E8752] selection:text-white relative min-h-screen">
 
@@ -41,8 +42,7 @@
         @include('partials.footer')
     </div>
 
-    <!-- Cart Slide-Over Drawer -->
-    @include('partials.cart-drawer')
+    <script>window.BD = { orderUrl: @json(route('order.create')) };</script>
 
     <!-- Custom JS (baku-dapa.js) -->
     <script src="{{ asset('js/baku-dapa.js') }}"></script>

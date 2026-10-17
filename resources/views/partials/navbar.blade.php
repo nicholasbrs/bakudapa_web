@@ -15,7 +15,7 @@
 
         <!-- Desktop Navigation -->
         <nav class="hidden md:flex items-center gap-7 text-sm font-medium text-[#94A898]">
-            <a href="{{ route('home') }}#menu" class="hover:text-white transition">Menu</a>
+            <a href="{{ route('home') }}#promo" class="hover:text-white transition">Promo</a>
             <a href="{{ route('order.create') }}" class="hover:text-white transition text-[#86EFAC] font-semibold">Order Page</a>
             <a href="{{ route('order.lookup') }}" class="hover:text-white transition">Track Order</a>
             <a href="{{ route('admin.orders') }}" class="font-mono-ai text-xs px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-[#E2C07D] hover:border-[#E2C07D]/50 transition">
@@ -23,18 +23,10 @@
             </a>
         </nav>
 
-        <!-- Right CTA & Cart Button -->
+        <!-- Right CTA (Bag hanya ada di halaman Order) -->
         <div class="flex items-center gap-3">
-            <button onclick="toggleCartDrawer(true)" class="bg-[#0D140F]/65 backdrop-blur-md border border-white/15 px-4 py-2.5 rounded-xl flex items-center gap-2.5 text-sm font-medium text-white hover:border-[#4E8752] transition">
-                <svg class="w-4 h-4 text-[#86EFAC]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-                </svg>
-                <span>Bag</span>
-                <span id="cart-count-badge" class="font-mono-ai px-2 py-0.5 text-xs rounded-full bg-[#4E8752] text-white font-semibold">0</span>
-            </button>
-
-            <a href="{{ route('order.create') }}" class="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-[#4E8752] to-[#1B4323] border border-[#86EFAC]/30 text-white shadow-lg shadow-[#4E8752]/20 hover:brightness-110 transition">
-                Order & Checkout
+            <a href="{{ route('order.create') }}" class="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-[#4E8752] to-[#1B4323] border border-[#86EFAC]/30 text-white shadow-lg shadow-[#4E8752]/20 hover:brightness-110 transition">
+                Order Now
             </a>
         </div>
     </div>

@@ -10,7 +10,7 @@ class OrderController extends Controller
 {
     private string $storageFile = 'orders.json';
 
-    // Daftar Menu (Sama dengan HomeController agar bisa tambah item langsung di halaman Order)
+    // Daftar Menu (satu-satunya sumber data menu; halaman home tidak lagi menampilkan menu)
     private function getMenus(): array
     {
         return [
@@ -18,51 +18,75 @@ class OrderController extends Controller
                 'id' => 1,
                 'name' => 'Cakalang Fufu Rabe Rica',
                 'category' => 'HALAL',
+                'badge' => 'Best Seller #1',
                 'price' => 95000,
-                'weight' => '350g',
-                'image' => 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80'
+                'weight' => '350g (2-3 Servings)',
+                'spicy' => 'Medium-High Heat',
+                'desc' => 'Traditional Minahasan wood-smoked skipjack tuna, hand-shredded and slow-cooked with fiery curly red chili, shallots, and fresh kaffir lime leaves.',
+                'image' => 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=900&q=85'
             ],
             [
                 'id' => 2,
                 'name' => 'Ayam Woku Belanga',
                 'category' => 'HALAL',
+                'badge' => 'Chef Signature',
                 'price' => 110000,
-                'weight' => '500g',
-                'image' => 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=600&q=80'
+                'weight' => '500g (3-4 Servings)',
+                'spicy' => 'Aromatic Spicy',
+                'desc' => 'Organic free-range chicken simmered in a rich yellow Woku herb paste infused with lemon basil, pandan leaves, turmeric leaves, and lemongrass.',
+                'image' => 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=900&q=85'
             ],
             [
                 'id' => 3,
                 'name' => 'Smoked Roa Chili Artisan Jar',
                 'category' => 'HALAL',
+                'badge' => '30-Day Room Temp Shelf Life',
                 'price' => 75000,
-                'weight' => '200g',
-                'image' => 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=600&q=80'
+                'weight' => '200g (Sealed Glass Jar)',
+                'spicy' => 'Smoky & Savory Heat',
+                'desc' => '100% pure smoked flying fish (Ikan Roa) from North Sulawesi waters, finely ground and slow-braised in cold-pressed coconut oil and spices.',
+                'image' => 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=900&q=85'
             ],
             [
                 'id' => 4,
                 'name' => 'Beef Shank Garo Rica',
                 'category' => 'HALAL',
+                'badge' => 'Premium Slow-Braised',
                 'price' => 135000,
-                'weight' => '400g',
-                'image' => 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=600&q=80'
+                'weight' => '400g (3 Servings)',
+                'spicy' => 'Extra Fiery',
+                'desc' => 'Tender prime beef shank braised for hours in an abundant Manadonese red chili rica reduction finished with fresh kemangi basil.',
+                'image' => 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=900&q=85'
             ],
             [
                 'id' => 5,
                 'name' => 'Crispy Pork Tore Rica',
                 'category' => 'NON-HALAL',
+                'badge' => 'Non-Halal • Dedicated Kitchen',
                 'price' => 145000,
-                'weight' => '400g',
-                'image' => 'https://images.unsplash.com/photo-1514944298352-f4d732142f74?auto=format&fit=crop&w=600&q=80'
+                'weight' => '400g (3 Servings)',
+                'spicy' => 'Savory & Crispy Heat',
+                'desc' => 'Crackling roasted pork belly Manado-style, packed with separate roasted chili rica and fresh citrus dabu-dabu salsa.',
+                'image' => 'https://images.unsplash.com/photo-1514944298352-f4d732142f74?auto=format&fit=crop&w=900&q=85'
             ],
             [
                 'id' => 6,
                 'name' => 'Pork Tinoransak Bamboo Spice',
                 'category' => 'NON-HALAL',
+                'badge' => 'Non-Halal • Dedicated Kitchen',
                 'price' => 140000,
-                'weight' => '450g',
-                'image' => 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80'
+                'weight' => '450g (3-4 Servings)',
+                'spicy' => 'Green Herb Heat',
+                'desc' => 'Heritage Minahasan pork dish cooked with coarse green chili, ginger, lemongrass, lime leaves, and authentic charred bamboo aroma.',
+                'image' => 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=900&q=85'
             ]
         ];
+    }
+
+    // Data toko / titik pickup (diatur di config/bakudapa.php)
+    private function getShop(): array
+    {
+        return config('bakudapa.shop');
     }
 
     // Daftar Metode Pembayaran Manual (QRIS, Mandiri, BCA, BRI, BNI)
@@ -126,7 +150,9 @@ class OrderController extends Controller
     {
         $menus = $this->getMenus();
         $paymentMethods = $this->getPaymentMethods();
-        return view('orders.create', compact('menus', 'paymentMethods'));
+        $shop = $this->getShop();
+        $deliveryFee = (int) config('bakudapa.delivery_fee');
+        return view('orders.create', compact('menus', 'paymentMethods', 'shop', 'deliveryFee'));
     }
 
     // 2. Simpan Pesanan Baru (POST /order)
@@ -139,9 +165,16 @@ class OrderController extends Controller
             'fulfillment_type' => 'required|in:delivery,pickup',
             'delivery_address' => 'required_if:fulfillment_type,delivery|nullable|string|max:500',
             'delivery_city' => 'required_if:fulfillment_type,delivery|nullable|string|max:100',
+            'delivery_lat' => 'required_if:fulfillment_type,delivery|nullable|numeric|between:-90,90',
+            'delivery_lng' => 'required_if:fulfillment_type,delivery|nullable|numeric|between:-180,180',
+            'delivery_place' => 'nullable|string|max:400',
+            'address_detail' => 'nullable|string|max:200',
             'notes' => 'nullable|string|max:500',
             'payment_method' => 'required|in:QRIS,BCA,MANDIRI,BRI,BNI',
             'cart_json' => 'required|string'
+        ], [
+            'delivery_lat.required_if' => 'Please pin your delivery location on the map.',
+            'delivery_lng.required_if' => 'Please pin your delivery location on the map.',
         ]);
 
         $items = json_decode($request->cart_json, true);
@@ -150,7 +183,9 @@ class OrderController extends Controller
         }
 
         $subtotal = collect($items)->sum(fn($i) => ((int)$i['price']) * ((int)$i['qty']));
-        $shippingFee = $request->fulfillment_type === 'delivery' ? 25000 : 0;
+        $shippingFee = $request->fulfillment_type === 'delivery' ? (int) config('bakudapa.delivery_fee') : 0;
+        $shop = $this->getShop();
+        $isDelivery = $request->fulfillment_type === 'delivery';
         $uniqueCode = rand(101, 499); // Kode unik 3 digit untuk mempermudah cek mutasi manual
         $grandTotal = $subtotal + $shippingFee + $uniqueCode;
 
@@ -164,10 +199,15 @@ class OrderController extends Controller
             'customer_phone' => $request->customer_phone,
             'customer_email' => $request->customer_email,
             'fulfillment_type' => $request->fulfillment_type, // 'delivery' or 'pickup'
-            'delivery_city' => $request->delivery_city,
-            'delivery_address' => $request->fulfillment_type === 'delivery'
+            'delivery_city' => $isDelivery ? $request->delivery_city : null,
+            'delivery_address' => $isDelivery
                 ? $request->delivery_address
-                : 'PICKUP AT BAKU DAPA CENTRAL KITCHEN: Jl. Sam Ratulangi No. 88, Menteng, Central Jakarta (Placeholder)',
+                : 'PICKUP AT ' . strtoupper($shop['name']) . ': ' . $shop['address'],
+            'address_detail' => $isDelivery ? $request->address_detail : null,
+            // Titik pin dari peta (delivery) atau koordinat toko (pickup)
+            'delivery_lat' => $isDelivery ? round((float) $request->delivery_lat, 7) : (float) $shop['lat'],
+            'delivery_lng' => $isDelivery ? round((float) $request->delivery_lng, 7) : (float) $shop['lng'],
+            'delivery_place' => $isDelivery ? $request->delivery_place : null,
             'notes' => $request->notes,
             'payment_method' => $request->payment_method,
             'items' => $items,
@@ -215,7 +255,9 @@ class OrderController extends Controller
         $paymentMethods = $this->getPaymentMethods();
         $selectedPayment = $paymentMethods[$order['payment_method']] ?? $paymentMethods['QRIS'];
 
-        return view('orders.track', compact('order', 'selectedPayment', 'paymentMethods'));
+        $shop = $this->getShop();
+
+        return view('orders.track', compact('order', 'selectedPayment', 'paymentMethods', 'shop'));
     }
 
     // 5. Upload Bukti Pembayaran

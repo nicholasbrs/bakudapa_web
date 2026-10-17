@@ -17,6 +17,14 @@
     ];
     $currentStep = $statusMap[$order['status']] ?? 0;
     $isPickup = $order['fulfillment_type'] === 'pickup';
+
+    // Tracker live terkunci sampai pembayaran terverifikasi admin
+    $locked = in_array($order['status'], ['unpaid', 'waiting_verification', 'rejected']);
+    $phase = $locked ? ($order['status'] === 'waiting_verification' ? 2 : 1) : 3;
+
+    // Titik peta: pin pelanggan (delivery) atau lokasi toko (pickup)
+    $mapLat = $isPickup ? ($shop['lat'] ?? null) : ($order['delivery_lat'] ?? null);
+    $mapLng = $isPickup ? ($shop['lng'] ?? null) : ($order['delivery_lng'] ?? null);
 @endphp
 
 <section class="py-12 lg:py-16">
@@ -37,8 +45,11 @@
             </div>
         @endif
 
+        <!-- Area yang di-refresh otomatis ketika status berubah (lihat js/track-live.js) -->
+        <div id="live-region" data-status="{{ $order['status'] }}" class="flex flex-col gap-8">
+
         <!-- TOP HEADER CARD -->
-        <div class="glass-card rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div class="order-1 glass-card rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
                 <div class="flex items-center gap-3">
                     <span class="font-mono-ai text-xs px-3 py-1 rounded-full bg-[#1B4323] border border-[#4E8752] text-[#86EFAC]">
@@ -78,9 +89,41 @@
         </div>
 
         <!-- =====================================================
+             PROGRESS: PAY -> VERIFY -> LIVE TRACKING
+        ====================================================== -->
+        <div class="order-2 glass-card rounded-3xl p-5 sm:p-6">
+            <div class="flex items-center">
+                @foreach([1 => 'Pay', 2 => 'Verification', 3 => 'Live Tracking'] as $n => $label)
+                    @php
+                        $stepDone = $n < $phase || ($n === 3 && $order['status'] === 'completed');
+                        $stepActive = $n === $phase && !$stepDone;
+                    @endphp
+                    <div class="flex items-center gap-2.5 shrink-0">
+                        <span class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold font-mono-ai {{ $stepDone ? 'bg-[#86EFAC] text-[#0D140F]' : ($stepActive ? 'bg-[#4E8752] text-white ring-2 ring-[#86EFAC]/50' : 'bg-white/10 text-[#94A898]') }}">{{ $stepDone ? '✓' : sprintf('%02d', $n) }}</span>
+                        <span class="text-xs font-semibold {{ $stepActive ? 'text-white' : ($stepDone ? 'text-[#86EFAC]' : 'text-[#94A898]') }}">{{ $label }}</span>
+                    </div>
+                    @if($n < 3)
+                        <div class="flex-1 h-px mx-3 {{ $n < $phase ? 'bg-[#86EFAC]' : 'bg-white/15' }}"></div>
+                    @endif
+                @endforeach
+            </div>
+            <p class="text-xs text-[#94A898] mt-4">
+                @if($order['status'] === 'rejected')
+                    Your last receipt was not accepted. Please upload a clear, new receipt below.
+                @elseif($order['status'] === 'unpaid')
+                    Transfer the exact total below and upload your receipt. Live tracking unlocks once our admin verifies your payment.
+                @elseif($order['status'] === 'waiting_verification')
+                    Receipt received. This page updates by itself the moment your payment is verified.
+                @else
+                    Payment verified. Follow every stage of your order below. This page updates automatically.
+                @endif
+            </p>
+        </div>
+
+        <!-- =====================================================
              INTERACTIVE & ANIMATED 4-STAGE ORDER STATUS TRACKER
         ====================================================== -->
-        <div class="glass-card rounded-3xl p-6 sm:p-10">
+        <div class="{{ $locked ? 'order-4' : 'order-3' }} glass-card rounded-3xl p-6 sm:p-10">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-8">
                 <div>
                     <span class="font-mono-ai text-xs uppercase tracking-[0.2em] text-[#E2C07D]">Interactive Live Telemetry</span>
@@ -89,6 +132,30 @@
                 <span class="text-xs text-[#94A898]">Click any stage icon below to inspect details</span>
             </div>
 
+            <div class="relative">
+            @if($locked)
+                <div class="absolute inset-0 z-10 flex items-center justify-center p-4">
+                    <div class="max-w-md text-center p-6 rounded-2xl bg-[#0D140F]/95 border border-[#E2C07D]/40 shadow-2xl">
+                        <div class="text-3xl mb-2">🔒</div>
+                        <p class="font-display-ai text-lg font-bold text-white">
+                            @if($order['status'] === 'waiting_verification') Verifying your payment…
+                            @elseif($order['status'] === 'rejected') Receipt was rejected
+                            @else Pay to unlock live tracking
+                            @endif
+                        </p>
+                        <p class="text-xs text-[#94A898] mt-1.5 leading-relaxed">
+                            @if($order['status'] === 'waiting_verification')
+                                Hang tight. Your tracker unlocks here automatically as soon as the admin verifies the transfer.
+                            @elseif($order['status'] === 'rejected')
+                                Please upload a clear receipt below to continue.
+                            @else
+                                Upload your transfer receipt below. Once it is verified, every stage of your order becomes live here.
+                            @endif
+                        </p>
+                    </div>
+                </div>
+            @endif
+            <div class="{{ $locked ? 'opacity-25 blur-[2px] pointer-events-none select-none' : '' }}">
             <div class="grid grid-cols-1 sm:grid-cols-4 gap-6 relative">
                 <!-- STAGE 1: PAID & VERIFIED -->
                 <div onclick="showStageDetail(1)" class="cursor-pointer p-5 rounded-2xl bg-[#050806]/70 border {{ $currentStep >= 1 ? 'border-[#4ADE80]/60' : ($currentStep == 0.5 ? 'border-cyan-400/60' : 'border-white/10') }} transition hover:scale-[1.02]">
@@ -174,6 +241,9 @@
                 </div>
             </div>
 
+            </div>
+            </div>
+
             <!-- Interactive Stage Description Box -->
             <div id="stage-detail-box" class="mt-6 p-4 rounded-2xl bg-[#1B4323]/30 border border-[#4E8752]/40 text-xs text-[#F2F7F4] flex items-center justify-between">
                 <span id="stage-detail-text">
@@ -199,7 +269,7 @@
         <!-- =====================================================
              PAYMENT INSTRUCTIONS + PROOF UPLOAD / WITHDRAW SECTION
         ====================================================== -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="{{ $locked ? 'order-3' : 'order-4' }} grid grid-cols-1 lg:grid-cols-12 gap-8">
 
             <!-- LEFT: BANK / QRIS DETAILS & UPLOAD / WITHDRAW -->
             <div class="lg:col-span-7 space-y-6">
@@ -331,7 +401,30 @@
                             @if(!empty($order['delivery_city']))
                                 <div class="font-mono-ai text-[#86EFAC] mt-1">City: {{ $order['delivery_city'] }}</div>
                             @endif
+                            @if(!empty($order['address_detail']))
+                                <div class="text-[#E2C07D] mt-1">Landmark: {{ $order['address_detail'] }}</div>
+                            @endif
                         </div>
+
+                        @if($mapLat !== null && $mapLng !== null)
+                            <div class="space-y-3 pt-2">
+                                <p class="text-[#94A898]">{{ $isPickup ? 'Pickup point on map:' : 'Your pinned location:' }}</p>
+                                <div class="relative isolate rounded-xl overflow-hidden border border-white/15">
+                                    <div id="track-map" class="map-dark h-56 w-full"
+                                         data-lat="{{ $mapLat }}" data-lng="{{ $mapLng }}"
+                                         data-type="{{ $isPickup ? 'pickup' : 'delivery' }}"
+                                         data-label="{{ $isPickup ? ($shop['name'] ?? 'Pickup point') : 'Delivery location' }}"></div>
+                                </div>
+                                <div class="flex flex-wrap gap-2">
+                                    <a href="https://www.google.com/maps/search/?api=1&query={{ $mapLat }},{{ $mapLng }}" target="_blank" rel="noopener"
+                                       class="px-3.5 py-2 rounded-lg bg-[#4E8752] hover:bg-[#3d6e40] text-white text-[11px] font-semibold transition">Open in Google Maps</a>
+                                    @if($isPickup)
+                                        <a href="https://www.google.com/maps/dir/?api=1&destination={{ $mapLat }},{{ $mapLng }}" target="_blank" rel="noopener"
+                                           class="px-3.5 py-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/15 text-white text-[11px] font-semibold transition">Get Directions</a>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
                         @if(!empty($order['notes']))
                             <p class="text-[#E2C07D] pt-1">Notes: "{{ $order['notes'] }}"</p>
                         @endif
@@ -370,8 +463,14 @@
 
         </div>
 
+        </div><!-- /#live-region -->
+
     </div>
 </section>
+
+@push('styles')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+@endpush
 
 @push('scripts')
 <script>
@@ -396,5 +495,8 @@
         textEl.innerHTML = descriptions[stage];
     }
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script src="{{ asset('js/bd-map.js') }}"></script>
+<script src="{{ asset('js/track-live.js') }}"></script>
 @endpush
 @endsection
